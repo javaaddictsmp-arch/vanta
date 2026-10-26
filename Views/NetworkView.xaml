@@ -1,0 +1,353 @@
+﻿<UserControl x:Class="TuneUp.Views.NetworkView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:TuneUp.Controls"
+             xmlns:vm="clr-namespace:TuneUp.ViewModels"
+             xmlns:s="clr-namespace:TuneUp.Services"
+             Style="{StaticResource ViewFade}">
+    <Grid Margin="32,26,32,0">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Margin="0,0,0,16">
+            <TextBlock Text="Network &amp; Ping" Style="{StaticResource H1}"/>
+            <TextBlock Style="{StaticResource MutedText}" Margin="0,4,0,0"
+                       Text="Find out why games lag online and fix what can be fixed on your side. Tests only contact the internet when you click them."/>
+        </StackPanel>
+
+        <TabControl Grid.Row="1" SelectedIndex="{Binding SelectedTab}">
+
+            <!-- ============================== Ping ============================== -->
+            <TabItem Header="Ping">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="0,0,6,24">
+                        <c:Explainer Text="Ping is how long data takes to reach a server and come back. Lower is better, but steady matters even more: 'jitter' (ping jumping around) and 'packet loss' cause the rubber-banding you feel in games. Pick a region near the game servers you play on."/>
+
+                        <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                            <StackPanel>
+                                <DockPanel>
+                                    <CheckBox DockPanel.Dock="Right" Style="{StaticResource SwitchStyle}" IsChecked="{Binding FollowGameServer}" Content="Follow my game" VerticalAlignment="Top"/>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Ellipse Style="{StaticResource PulseDot}" Margin="0,0,10,0" VerticalAlignment="Center"
+                                                 Visibility="{Binding GameConnActive, Converter={StaticResource BoolToVis}}"/>
+                                        <StackPanel>
+                                            <TextBlock Text="Live game connection" Style="{StaticResource H2}"/>
+                                            <TextBlock Style="{StaticResource MutedText}" Margin="0,2,0,0"
+                                                       Text="Your real ping to the server your game is connected to right now, found automatically."/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </DockPanel>
+                                <TextBlock Text="{Binding GameConnHint}" Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,12,0,0"
+                                           Visibility="{Binding GameConnHint, Converter={StaticResource StringToVis}}"/>
+                                <StackPanel Visibility="{Binding GameConnActive, Converter={StaticResource BoolToVis}}" Margin="0,12,0,0">
+                                    <TextBlock Text="{Binding GameConnTitle}" FontWeight="SemiBold"/>
+                                    <Grid Margin="0,8,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="170"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding GameConnPing}" FontSize="32" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}"/>
+                                            <TextBlock Text="in-game ping" Style="{StaticResource MutedText}"/>
+                                        </StackPanel>
+                                        <c:Sparkline Grid.Column="1" Values="{Binding GameConnGraph}" Stroke="{DynamicResource AccentBrush}" Height="90"/>
+                                    </Grid>
+                                    <TextBlock Text="{Binding GameConnStats}" FontFamily="Consolas" FontSize="12.5" Margin="0,10,0,0"/>
+                                    <TextBlock Text="{Binding GameConnDetail}" Style="{StaticResource MutedText}" FontSize="12" TextWrapping="Wrap" Margin="0,6,0,0"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="280"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <ComboBox ItemsSource="{Binding Targets}" SelectedItem="{Binding Target}" DisplayMemberPath="Name"/>
+                                    <TextBox Grid.Column="1" Margin="8,0,0,0" Text="{Binding CustomHost, UpdateSourceTrigger=PropertyChanged}" ToolTip="Or type any address / IP (leave empty to use the region)"/>
+                                    <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="8,0,0,0">
+                                        <Button Content="Start" Style="{StaticResource AccentButton}" Command="{Binding StartPingCommand}"
+                                                Visibility="{Binding IsPinging, Converter={StaticResource InvBoolToVis}}"/>
+                                        <Button Content="Stop" Style="{StaticResource DangerButton}" Command="{Binding StopPingCommand}"
+                                                Visibility="{Binding IsPinging, Converter={StaticResource BoolToVis}}"/>
+                                        <Button Content="Traceroute" Command="{Binding TraceCommand}" Margin="8,0,0,0" IsEnabled="{Binding IsBusy, Converter={StaticResource InvBool}}"/>
+                                    </StackPanel>
+                                </Grid>
+                                <Grid Margin="0,14,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="170"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding PingNow}" FontSize="32" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}"/>
+                                        <TextBlock Text="current ping" Style="{StaticResource MutedText}"/>
+                                    </StackPanel>
+                                    <c:Sparkline Grid.Column="1" Values="{Binding PingGraph}" Stroke="{DynamicResource AccentBrush}" Height="110"/>
+                                </Grid>
+                                <TextBlock Text="{Binding PingStats}" FontFamily="Consolas" FontSize="12.5" Margin="0,10,0,0"/>
+                                <TextBlock Text="{Binding PingVerdict}" TextWrapping="Wrap" Margin="0,6,0,0" FontWeight="SemiBold"
+                                           Visibility="{Binding PingVerdict, Converter={StaticResource StringToVis}}"/>
+                                <TextBlock Style="{StaticResource MutedText}" FontSize="12" Margin="0,8,0,0"
+                                           Text="Region endpoints are cloud data centers many games use (Fortnite, Apex, Valorant and more run on AWS-style clouds). For the exact server, start your game: the Live game connection card above finds it."/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource Card}" Margin="0,12,0,0">
+                            <StackPanel>
+                                <DockPanel>
+                                    <Button DockPanel.Dock="Right" Content="Ping all regions" Command="{Binding PingAllCommand}" VerticalAlignment="Top" IsEnabled="{Binding IsBusy, Converter={StaticResource InvBool}}"/>
+                                    <StackPanel>
+                                        <TextBlock Text="Which region is closest?" Style="{StaticResource H2}"/>
+                                        <TextBlock Style="{StaticResource MutedText}" Margin="0,2,0,0" Text="4 quick pings to each region. Choose the lowest one as your in-game server region."/>
+                                    </StackPanel>
+                                </DockPanel>
+                                <ItemsControl ItemsSource="{Binding Regions}" Margin="0,10,0,0">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate DataType="{x:Type vm:RegionPing}">
+                                            <Grid Margin="0,2">
+                                                <Grid.ColumnDefinitions><ColumnDefinition Width="260"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                                <TextBlock Text="{Binding Name}"/>
+                                                <TextBlock Grid.Column="1" Text="{Binding Result}" FontWeight="SemiBold"/>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource Card}" Margin="0,12,0,0" Visibility="{Binding TraceStatus, Converter={StaticResource StringToVis}}">
+                            <StackPanel>
+                                <TextBlock Text="Traceroute" Style="{StaticResource H2}"/>
+                                <TextBlock Text="{Binding TraceStatus}" Style="{StaticResource MutedText}" Margin="0,2,0,8"/>
+                                <ItemsControl ItemsSource="{Binding Hops}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate DataType="{x:Type s:Hop}">
+                                            <Grid Margin="0,1">
+                                                <Grid.ColumnDefinitions><ColumnDefinition Width="36"/><ColumnDefinition Width="80"/><ColumnDefinition Width="150"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                                <TextBlock Text="{Binding Number}" Foreground="{StaticResource MutedBrush}" FontFamily="Consolas"/>
+                                                <TextBlock Grid.Column="1" Text="{Binding Ms, StringFormat='{}{0} ms', TargetNullValue='*'}" FontFamily="Consolas"/>
+                                                <TextBlock Grid.Column="2" Text="{Binding Address}" FontFamily="Consolas"/>
+                                                <TextBlock Grid.Column="3" Text="{Binding HostName}" Style="{StaticResource MutedText}" FontSize="12" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap"/>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- ============================== Speed ============================== -->
+            <TabItem Header="Speed &amp; bufferbloat">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="0,0,6,24">
+                        <c:Explainer Text="Speed is how much data you can move; it matters for downloads and streaming. For gaming the important part is 'bufferbloat': how much your ping rises when the connection is busy (someone streaming, a game updating). The grade shows that."/>
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <DockPanel>
+                                    <Button DockPanel.Dock="Right" Content="Run speed test" Style="{StaticResource AccentButton}" Command="{Binding SpeedTestCommand}" VerticalAlignment="Top"
+                                            IsEnabled="{Binding IsBusy, Converter={StaticResource InvBool}}"/>
+                                    <StackPanel>
+                                        <TextBlock Text="Speed test (about 20 seconds)" Style="{StaticResource H2}"/>
+                                        <TextBlock Text="{Binding SpeedStatus}" Style="{StaticResource MutedText}" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </DockPanel>
+                                <UniformGrid Columns="4" Margin="0,16,0,0" Visibility="{Binding Speed, Converter={StaticResource NotNullToVis}}">
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding Speed.DownMbps, StringFormat='{}{0:0}'}" FontSize="30" FontWeight="Bold"/>
+                                        <TextBlock Text="Mbps download" Style="{StaticResource MutedText}"/>
+                                    </StackPanel>
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding Speed.UpMbps, StringFormat='{}{0:0}'}" FontSize="30" FontWeight="Bold"/>
+                                        <TextBlock Text="Mbps upload" Style="{StaticResource MutedText}"/>
+                                    </StackPanel>
+                                    <StackPanel>
+                                        <TextBlock FontSize="30" FontWeight="Bold"><Run Text="{Binding Speed.IdleMs, StringFormat='{}{0:0}', Mode=OneWay}"/><Run Text=" → " Foreground="{StaticResource MutedBrush}" FontSize="20"/><Run Text="{Binding Speed.LoadedMs, StringFormat='{}{0:0}', Mode=OneWay}"/></TextBlock>
+                                        <TextBlock Text="ms ping idle → busy" Style="{StaticResource MutedText}"/>
+                                    </StackPanel>
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding Speed.Grade}" FontSize="30" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}"/>
+                                        <TextBlock Text="bufferbloat grade" Style="{StaticResource MutedText}"/>
+                                    </StackPanel>
+                                </UniformGrid>
+                                <TextBlock Text="{Binding Speed.Verdict}" TextWrapping="Wrap" Margin="0,14,0,0" Visibility="{Binding Speed, Converter={StaticResource NotNullToVis}}"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- ============================== DNS ============================== -->
+            <TabItem Header="DNS &amp; fixes">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="0,0,6,24">
+                        <c:Explainer Text="DNS turns names like steampowered.com into addresses. A faster DNS makes sites and launchers connect a little quicker but does NOT lower your in-game ping. Benchmark first, then switch if another one is clearly faster; Vanta can always restore your original."/>
+
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <Grid>
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <ComboBox ItemsSource="{Binding Adapters}" SelectedItem="{Binding SelectedAdapter}">
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate DataType="{x:Type s:AdapterInfo}">
+                                                <TextBlock><Run Text="{Binding Name, Mode=OneWay}"/><Run Text="{Binding Type, Mode=OneWay, StringFormat='  {0}'}" Foreground="{StaticResource MutedBrush}"/></TextBlock>
+                                            </DataTemplate>
+                                        </ComboBox.ItemTemplate>
+                                    </ComboBox>
+                                    <Button Grid.Column="1" Content="Benchmark DNS" Command="{Binding BenchmarkDnsCommand}" Margin="8,0,0,0" IsEnabled="{Binding IsBusy, Converter={StaticResource InvBool}}"/>
+                                </Grid>
+                                <TextBlock Margin="0,8,0,0" Style="{StaticResource MutedText}">
+                                    <Run Text="Current DNS: "/><Run Text="{Binding SelectedAdapter.Dns[0], Mode=OneWay, FallbackValue='-'}"/>
+                                </TextBlock>
+                                <ItemsControl ItemsSource="{Binding DnsResults}" Margin="0,10,0,0">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate DataType="{x:Type s:DnsResult}">
+                                            <Grid Margin="0,2">
+                                                <Grid.ColumnDefinitions><ColumnDefinition Width="260"/><ColumnDefinition Width="150"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                                <TextBlock Text="{Binding Name}"/>
+                                                <TextBlock Grid.Column="1" Text="{Binding Server}" Foreground="{StaticResource MutedBrush}" FontFamily="Consolas"/>
+                                                <TextBlock Grid.Column="2" Text="{Binding MedianMs, StringFormat='{}{0:0} ms', TargetNullValue='no answer'}" FontWeight="SemiBold"/>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <Grid Margin="0,14,0,0">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="260"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <ComboBox ItemsSource="{Binding Providers}" SelectedItem="{Binding SelectedProvider}" DisplayMemberPath="Name"/>
+                                    <Button Grid.Column="1" Content="Use this DNS" Style="{StaticResource AccentButton}" Command="{Binding SetDnsCommand}" Margin="8,0,0,0"/>
+                                    <Button Grid.Column="2" Content="Restore my DNS" Command="{Binding RestoreDnsCommand}" Margin="8,0,0,0" IsEnabled="{Binding CanRestoreDns}"/>
+                                </Grid>
+                                <TextBlock Text="{Binding DnsStatus}" Margin="0,10,0,0" TextWrapping="Wrap" Visibility="{Binding DnsStatus, Converter={StaticResource StringToVis}}"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource Card}" Margin="0,12,0,0">
+                            <StackPanel>
+                                <TextBlock Text="Quick fixes" Style="{StaticResource H2}"/>
+                                <TextBlock Style="{StaticResource MutedText}" Margin="0,2,0,10" Text="For 'connected but no internet' or 'can't reach server' problems."/>
+                                <WrapPanel>
+                                    <Button Content="Flush DNS cache" Command="{Binding FlushDnsCommand}" Margin="0,0,8,0"/>
+                                    <Button Content="Reset network (needs restart)" Style="{StaticResource DangerButton}" Command="{Binding ResetStackCommand}"/>
+                                </WrapPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource Card}" Margin="0,12,0,0">
+                            <StackPanel>
+                                <TextBlock Text="Network tweaks" Style="{StaticResource H2}" Margin="0,0,0,10"/>
+                                <ItemsControl DataContext="{Binding Tweaks}" ItemsSource="{Binding Items}" ItemTemplate="{StaticResource TweakCard}"/>
+                                <TextBlock Style="{StaticResource MutedText}" FontSize="12"
+                                           Text="Not included on purpose: 'Nagle off' (TcpAckFrequency/TCPNoDelay) only affects TCP, and nearly all action games use UDP, so it does nothing for them; TCP auto-tuning changes mostly slow downloads."/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- ============================== Adapter & Wi-Fi ============================== -->
+            <TabItem Header="Adapter &amp; Wi-Fi" Visibility="{Binding IsAdvanced, Source={x:Static vm:UiMode.Instance}, Converter={StaticResource BoolToVis}}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="0,0,6,24">
+                        <c:Explainer Text="Your network adapter has power-saving settings that can add tiny delays or drop the connection. Turning them off is low-risk on a desktop. If you play on Wi-Fi, the check below tells you if a better channel or band would help (an Ethernet cable beats every Wi-Fi tweak)."/>
+
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <DockPanel>
+                                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Top">
+                                        <Button Content="Restore originals" Command="{Binding RestoreNicCommand}" Margin="0,0,8,0" IsEnabled="{Binding HasNicBackup}"/>
+                                        <Button Content="Read adapter settings" Style="{StaticResource AccentButton}" Command="{Binding LoadNicCommand}" IsEnabled="{Binding IsBusy, Converter={StaticResource InvBool}}"/>
+                                    </StackPanel>
+                                    <StackPanel>
+                                        <TextBlock Text="Adapter settings" Style="{StaticResource H2}"/>
+                                        <TextBlock Text="{Binding NicStatus}" Style="{StaticResource MutedText}" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </DockPanel>
+                                <ItemsControl ItemsSource="{Binding NicProps}" Margin="0,10,0,0">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate DataType="{x:Type vm:NicPropertyVm}">
+                                            <Grid Margin="0,0,0,10">
+                                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="200"/></Grid.ColumnDefinitions>
+                                                <StackPanel>
+                                                    <TextBlock><Run Text="{Binding Title, Mode=OneWay}" FontWeight="SemiBold"/><Run Text="{Binding Adapter, Mode=OneWay, StringFormat='  {0}'}" Foreground="{StaticResource MutedBrush}" FontSize="12"/></TextBlock>
+                                                    <TextBlock Text="{Binding Advice}" Style="{StaticResource MutedText}" FontSize="12"/>
+                                                </StackPanel>
+                                                <ComboBox Grid.Column="1" ItemsSource="{Binding Choices}" SelectedItem="{Binding Value}" VerticalAlignment="Center"/>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <WrapPanel Margin="0,4,0,0">
+                                    <Button Content="Stop Windows turning the adapter off" Command="{Binding DisableNicPowerSavingCommand}" Margin="0,0,8,0"/>
+                                    <Button Content="MTU test" Command="{Binding MtuTestCommand}"/>
+                                </WrapPanel>
+                                <TextBlock Text="{Binding MtuStatus}" Margin="0,10,0,0" TextWrapping="Wrap" Visibility="{Binding MtuStatus, Converter={StaticResource StringToVis}}"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource Card}" Margin="0,12,0,0">
+                            <StackPanel>
+                                <DockPanel>
+                                    <Button DockPanel.Dock="Right" Content="Check Wi-Fi" Command="{Binding WifiCheckCommand}" VerticalAlignment="Top"/>
+                                    <TextBlock Text="Wi-Fi" Style="{StaticResource H2}"/>
+                                </DockPanel>
+                                <TextBlock Margin="0,8,0,0" Visibility="{Binding Wifi, Converter={StaticResource NotNullToVis}}">
+                                    <Run Text="{Binding Wifi.Ssid, Mode=OneWay}" FontWeight="SemiBold"/>
+                                    <Run Text="{Binding Wifi.Signal, Mode=OneWay, StringFormat='  signal {0}%'}"/>
+                                    <Run Text="{Binding Wifi.Band, Mode=OneWay, StringFormat='  {0}'}"/>
+                                    <Run Text="{Binding Wifi.Channel, Mode=OneWay, StringFormat='  channel {0}'}"/>
+                                    <Run Text="{Binding Wifi.Radio, Mode=OneWay, StringFormat='  {0}'}" Foreground="{StaticResource MutedBrush}"/>
+                                </TextBlock>
+                                <TextBlock Text="{Binding WifiStatus}" TextWrapping="Wrap" Margin="0,6,0,0" Visibility="{Binding WifiStatus, Converter={StaticResource StringToVis}}"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- ============================== QoS ============================== -->
+            <TabItem Header="App priority (QoS)" Visibility="{Binding IsAdvanced, Source={x:Static vm:UiMode.Instance}, Converter={StaticResource BoolToVis}}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="0,0,6,24">
+                        <c:Explainer Text="Two Windows features for sharing your connection. 'Limit upload' stops an app (like a cloud backup or a launcher) from flooding your upload while you play, which is a real cause of lag. 'Priority' marks a game's traffic as urgent, but only helps if your router honours it; most home routers don't."/>
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <Grid>
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="70"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <TextBox Text="{Binding QosExe, UpdateSourceTrigger=PropertyChanged}" ToolTip="Program file name, e.g. OneDrive.exe or steam.exe"/>
+                                    <TextBlock Grid.Column="1" Text="Upload Mbps" VerticalAlignment="Center" Margin="12,0,8,0" Style="{StaticResource MutedText}"/>
+                                    <TextBox Grid.Column="2" Text="{Binding QosMbps}"/>
+                                    <Button Grid.Column="3" Content="Limit upload" Style="{StaticResource AccentButton}" Command="{Binding AddLimitCommand}" Margin="8,0,0,0"/>
+                                    <Button Grid.Column="4" Content="Mark as priority" Command="{Binding AddPriorityCommand}" Margin="8,0,0,0"/>
+                                </Grid>
+                                <TextBlock Style="{StaticResource MutedText}" FontSize="12" Margin="0,8,0,0"
+                                           Text="Windows can only limit an app's upload, not its download. To stop downloads hurting your ping, pause them or use your launcher's bandwidth limit (Steam: Settings > Downloads)."/>
+                                <TextBlock Text="{Binding QosStatus}" Margin="0,10,0,0" TextWrapping="Wrap" Visibility="{Binding QosStatus, Converter={StaticResource StringToVis}}"/>
+                                <DockPanel Margin="0,14,0,6">
+                                    <Button DockPanel.Dock="Right" Content="Refresh" Command="{Binding LoadQosCommand}" Padding="10,4"/>
+                                    <TextBlock Text="Your Vanta policies" Style="{StaticResource H2}"/>
+                                </DockPanel>
+                                <ItemsControl ItemsSource="{Binding Policies}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate DataType="{x:Type s:QosPolicy}">
+                                            <DockPanel Margin="0,3">
+                                                <Button DockPanel.Dock="Right" Content="Remove" Padding="10,4"
+                                                        Command="{Binding DataContext.RemovePolicyCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"/>
+                                                <TextBlock VerticalAlignment="Center"><Run Text="{Binding App, Mode=OneWay}" FontWeight="SemiBold"/><Run Text="{Binding Action, Mode=OneWay, StringFormat='  {0}'}" Foreground="{StaticResource MutedBrush}"/></TextBlock>
+                                            </DockPanel>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</UserControl>

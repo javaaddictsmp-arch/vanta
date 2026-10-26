@@ -1,0 +1,124 @@
+<UserControl x:Class="TuneUp.Views.Boost.GpuTab"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:TuneUp.Controls">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="0,0,4,24">
+            <c:Explainer Text="Your graphics card and monitor. Click Refresh first: the most valuable check is whether your monitor runs at its full speed (Hz), which is a free smoothness upgrade if it does not. Below that are graphics settings, each with a plain verdict."/>
+
+            <!-- Display + vendor -->
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Top">
+                            <Button Content="Windows graphics settings" Command="{Binding OpenGraphicsSettingsCommand}" Margin="0,0,8,0"/>
+                            <Button Content="Refresh" Style="{StaticResource AccentButton}" Command="{Binding RefreshCommand}"/>
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock Text="Display and GPU" Style="{StaticResource H2}"/>
+                            <TextBlock Text="{Binding VendorTitle}" Margin="0,6,0,0" Visibility="{Binding VendorTitle, Converter={StaticResource StringToVis}}"/>
+                        </StackPanel>
+                    </DockPanel>
+                    <TextBlock Text="{Binding DisplayText}" TextWrapping="Wrap" Margin="0,10,0,0"/>
+                    <Border Style="{StaticResource WarnNote}" Margin="0,10,0,0" Visibility="{Binding DisplayWarning, Converter={StaticResource StringToVis}}">
+                        <TextBlock Text="{Binding DisplayWarning}" TextWrapping="Wrap"/>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource Card}" Margin="0,12,0,0" Visibility="{Binding Vendor, Converter={StaticResource StringToVis}}">
+                <StackPanel>
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Top">
+                            <Button Content="Official driver page" Command="{Binding OpenDriverPageCommand}" Margin="0,0,8,0"/>
+                            <Button Content="MSI Afterburner" Command="{Binding OpenAfterburnerCommand}"
+                                    ToolTip="Vanta does not overclock or undervolt. Afterburner is the standard tool for power limits, fan curves and undervolting."/>
+                        </StackPanel>
+                        <TextBlock Text="Driver settings worth knowing" Style="{StaticResource H2}"/>
+                    </DockPanel>
+                    <TextBlock Text="{Binding NvidiaText}" FontFamily="Consolas" FontSize="12.5" Margin="0,10,0,0" TextWrapping="Wrap"
+                               Visibility="{Binding NvidiaText, Converter={StaticResource StringToVis}}"/>
+                    <ItemsControl ItemsSource="{Binding VendorTips}" Margin="0,10,0,0">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding StringFormat='•  {0}'}" TextWrapping="Wrap" Margin="0,2"/>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock Style="{StaticResource MutedText}" FontSize="12" Margin="0,8,0,0"
+                               Text="These are set in the vendor's control panel. Vanta shows them as guidance instead of writing driver profiles directly, which keeps driver updates and anti-cheat happy."/>
+                </StackPanel>
+            </Border>
+
+            <!-- Per game -->
+            <Border Style="{StaticResource Card}" Margin="0,12,0,0">
+                <StackPanel>
+                    <TextBlock Text="Per-game GPU settings" Style="{StaticResource H2}"/>
+                    <TextBlock Style="{StaticResource MutedText}" Margin="0,4,0,10"
+                               Text="Pick a game and its EXE. Both settings go through Vanta's backup and Change Log, so they can be undone."/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="300"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <ComboBox ItemsSource="{Binding Games}" SelectedItem="{Binding SelectedGame}" DisplayMemberPath="Name"/>
+                        <ComboBox Grid.Column="1" Margin="8,0,0,0" ItemsSource="{Binding Exes}" SelectedItem="{Binding SelectedExe}"/>
+                    </Grid>
+                    <ItemsControl DataContext="{Binding PerGameTweaks}" ItemsSource="{Binding Items}" ItemTemplate="{StaticResource TweakCard}" Margin="0,12,0,0"/>
+                    <TextBlock DataContext="{Binding PerGameTweaks}" Text="{Binding Notice}" Foreground="{StaticResource WarnBrush}" TextWrapping="Wrap"
+                               Visibility="{Binding Notice, Converter={StaticResource StringToVis}}"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Global -->
+            <Border Style="{StaticResource Card}" Margin="0,12,0,0">
+                <StackPanel>
+                    <TextBlock Text="Windows graphics and frame pacing" Style="{StaticResource H2}" Margin="0,0,0,10"/>
+                    <ItemsControl DataContext="{Binding Tweaks}" ItemsSource="{Binding Items}" ItemTemplate="{StaticResource TweakCard}"/>
+                    <TextBlock DataContext="{Binding Tweaks}" Text="{Binding Notice}" Foreground="{StaticResource WarnBrush}" TextWrapping="Wrap"
+                               Visibility="{Binding Notice, Converter={StaticResource StringToVis}}"/>
+                </StackPanel>
+            </Border>
+
+            <!-- DLSS -->
+            <Border Style="{StaticResource Card}" Margin="0,12,0,0">
+                <StackPanel>
+                    <DockPanel>
+                        <Button DockPanel.Dock="Right" Content="Scan games" Command="{Binding ScanDlssCommand}" VerticalAlignment="Top"/>
+                        <StackPanel>
+                            <TextBlock Text="DLSS DLL versions" Style="{StaticResource H2}"/>
+                            <TextBlock Style="{StaticResource MutedText}" Margin="0,4,0,0"
+                                       Text="Read-only viewer. To use a newer DLSS model, prefer the NVIDIA App's per-game 'DLSS Override': replacing DLLs by hand can trigger anti-cheat in online games."/>
+                        </StackPanel>
+                    </DockPanel>
+                    <TextBlock Text="{Binding DlssStatus}" Style="{StaticResource MutedText}" Margin="0,8,0,4"
+                               Visibility="{Binding DlssStatus, Converter={StaticResource StringToVis}}"/>
+                    <ItemsControl ItemsSource="{Binding DlssDlls}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,3" ToolTip="{Binding File}">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="260"/>
+                                        <ColumnDefinition Width="220"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="{Binding Game}" TextTrimming="CharacterEllipsis"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding Kind}" Foreground="{StaticResource MutedBrush}"/>
+                                    <TextBlock Grid.Column="2" Text="{Binding Version}" FontFamily="Consolas"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource Card}" Margin="0,12,0,0">
+                <StackPanel>
+                    <TextBlock Text="Not included (on purpose)" Style="{StaticResource H2}"/>
+                    <TextBlock Style="{StaticResource MutedText}" Margin="0,6,0,0"
+                               Text="Overclocking/undervolting and fan control: use MSI Afterburner, it is better at it. Stretched/custom resolutions: create them in the NVIDIA/AMD/Intel control panel (Custom Resolution), then pick them in game. Driver-level profile editing (Profile Inspector style) is planned as an optional read-only viewer."/>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

@@ -1,0 +1,183 @@
+<UserControl x:Class="TuneUp.Views.Boost.CpuPowerTab"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:TuneUp.ViewModels"
+             xmlns:c="clr-namespace:TuneUp.Controls">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="0,0,4,24">
+            <c:Explainer Text="Settings for your processor (CPU), the part that runs the game's logic. The Vanta power plan stops Windows from slowing the CPU down to save electricity while you play. Most people never need to change anything on this page: the defaults are already good."/>
+            <Border Style="{StaticResource Note}" Visibility="{Binding Status, Converter={StaticResource StringToVis}}" Margin="0,0,0,12">
+                <TextBlock Text="{Binding Status}" TextWrapping="Wrap"/>
+            </Border>
+
+            <!-- Topology -->
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <TextBlock Text="Your CPU layout" Style="{StaticResource H2}"/>
+                    <TextBlock Text="{Binding Topology}" Margin="0,6,0,0"/>
+                    <TextBlock Text="{Binding TopologyAdvice}" Style="{StaticResource MutedText}" Margin="0,6,0,0"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Power plan -->
+            <Border Style="{StaticResource Card}" Margin="0,12,0,0">
+                <StackPanel>
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Top">
+                            <Button Content="Add Ultimate Performance" Command="{Binding AddUltimateCommand}" Margin="0,0,8,0"/>
+                            <Button Content="Remove Vanta plan" Style="{StaticResource DangerButton}" Command="{Binding RemovePlanCommand}"
+                                    Visibility="{Binding TuneUpPlanExists, Converter={StaticResource BoolToVis}}"/>
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock Text="Vanta Performance power plan" Style="{StaticResource H2}"/>
+                            <TextBlock Style="{StaticResource MutedText}" Margin="0,4,0,0" MaxWidth="640" HorizontalAlignment="Left"
+                                       Text="A copy of High Performance that boosts switch to while a game runs. Your existing plans are never edited. Everything is plain powercfg, visible in Control Panel."/>
+                            <TextBlock Margin="0,6,0,0" Text="{Binding ActivePlanName, StringFormat='Active plan right now: {0}'}"/>
+                        </StackPanel>
+                    </DockPanel>
+
+                    <Grid Margin="0,14,0,0" DataContext="{Binding Plan}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="260"/>
+                            <ColumnDefinition Width="120"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Text="Minimum processor state (%)" VerticalAlignment="Center"/>
+                        <TextBox Grid.Column="1" Text="{Binding MinProcessorState}" Margin="0,0,0,6"/>
+                        <TextBlock Grid.Column="2" Style="{StaticResource MutedText}" FontSize="12" Margin="12,0,0,0" VerticalAlignment="Center"
+                                   Text="5 lets the CPU idle down; 100 pins clocks high (more heat, rarely more FPS)."/>
+
+                        <TextBlock Grid.Row="1" Text="Maximum processor state (%)" VerticalAlignment="Center"/>
+                        <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding MaxProcessorState}" Margin="0,0,0,6"/>
+                        <TextBlock Grid.Row="1" Grid.Column="2" Style="{StaticResource MutedText}" FontSize="12" Margin="12,0,0,0" VerticalAlignment="Center"
+                                   Text="Keep 100. 99 disables turbo boost (a laptop cooling trick)."/>
+
+                        <TextBlock Grid.Row="2" Text="Processor boost mode" VerticalAlignment="Center"/>
+                        <ComboBox Grid.Row="2" Grid.Column="1" Margin="0,0,0,6" ItemsSource="{x:Static vm:CpuPowerTabViewModel.BoostModeOptions}"
+                                  DisplayMemberPath="Label" SelectedValuePath="Value" SelectedValue="{Binding BoostMode}"/>
+                        <TextBlock Grid.Row="2" Grid.Column="2" Style="{StaticResource MutedText}" FontSize="12" Margin="12,0,0,0" VerticalAlignment="Center"
+                                   Text="Aggressive boosts sooner. Proven on laptops, small on desktops."/>
+
+                        <TextBlock Grid.Row="3" Text="Energy performance preference (0-100)" VerticalAlignment="Center"/>
+                        <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding Epp}" Margin="0,0,0,6"/>
+                        <TextBlock Grid.Row="3" Grid.Column="2" Style="{StaticResource MutedText}" FontSize="12" Margin="12,0,0,0" VerticalAlignment="Center"
+                                   Text="0 = maximum performance. Used by Intel Speed Shift and AMD CPPC."/>
+
+                        <TextBlock Grid.Row="4" Text="Min unparked cores (%)" VerticalAlignment="Center"/>
+                        <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding MinUnparkedCores}" Margin="0,0,0,6"/>
+                        <TextBlock Grid.Row="4" Grid.Column="2" Style="{StaticResource MutedText}" FontSize="12" Margin="12,0,0,0" VerticalAlignment="Center"
+                                   Text="100 = core parking off (ParkControl-style). Leave it alone on Ryzen X3D and Intel hybrid: Windows uses parking to steer games to the right cores."/>
+                    </Grid>
+
+                    <StackPanel DataContext="{Binding Plan}" Margin="0,6,0,0">
+                        <CheckBox Style="{StaticResource SwitchStyle}" IsChecked="{Binding UsbSelectiveSuspendOff}" Margin="0,0,0,8"
+                                  Content="USB selective suspend off (stops mice/headsets dropping into power saving)"/>
+                        <CheckBox Style="{StaticResource SwitchStyle}" IsChecked="{Binding PcieLinkPowerManagementOff}" Margin="0,0,0,8"
+                                  Content="PCIe link power management off"/>
+                        <CheckBox Style="{StaticResource SwitchStyle}" IsChecked="{Binding DisableIdleStates}"
+                                  Content="Disable CPU idle states (Advanced, more heat, rarely helps)"/>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                        <Button Content="Save plan settings" Style="{StaticResource AccentButton}" Command="{Binding ApplyPlanCommand}" Margin="0,0,8,0"/>
+                        <Button Content="Show core parking in Control Panel" Command="{Binding UnhideParkingCommand}"/>
+                    </StackPanel>
+
+                    <CheckBox Style="{StaticResource SwitchStyle}" IsChecked="{Binding IdleSaver}" Margin="0,14,0,0"
+                              Content="Idle saver: after a game, switch to Balanced (instead of the plan you had before)"/>
+
+                    <TextBlock Text="All power plans" Margin="0,16,0,6" Foreground="{StaticResource MutedBrush}"/>
+                    <ItemsControl ItemsSource="{Binding Plans}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <DockPanel Margin="0,0,0,6">
+                                    <Button DockPanel.Dock="Right" Content="Activate" Padding="10,4"
+                                            Command="{Binding DataContext.SetActivePlanCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                            CommandParameter="{Binding}"/>
+                                    <TextBlock VerticalAlignment="Center">
+                                        <Run Text="{Binding Name, Mode=OneWay}"/>
+                                        <Run Text="{Binding Guid, Mode=OneWay}" Foreground="{StaticResource MutedBrush}" FontSize="11"/>
+                                    </TextBlock>
+                                </DockPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+            <!-- ProBalance -->
+            <Border Style="{StaticResource Card}" Margin="0,12,0,0">
+                <StackPanel>
+                    <TextBlock Text="ProBalance (during boosts)" Style="{StaticResource H2}"/>
+                    <TextBlock Style="{StaticResource MutedText}" Margin="0,4,0,10"
+                               Text="Background programs above the threshold for 2 seconds drop to Below Normal priority until they calm down for 5 seconds. Nothing is ever suspended or killed by ProBalance."/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="260"/>
+                            <ColumnDefinition Width="120"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Threshold (% of total CPU)" VerticalAlignment="Center"/>
+                        <TextBox Grid.Column="1" Text="{Binding Threshold}"/>
+                    </Grid>
+                    <TextBlock Text="Never restrain (comma separated process names)" Margin="0,10,0,6"/>
+                    <TextBox Text="{Binding Exclusions, UpdateSourceTrigger=LostFocus}"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Rules -->
+            <Border Style="{StaticResource Card}" Margin="0,12,0,0">
+                <StackPanel>
+                    <TextBlock Text="Persistent per-app rules" Style="{StaticResource H2}"/>
+                    <TextBlock Style="{StaticResource MutedText}" Margin="0,4,0,10"
+                               Text="Like Process Lasso's 'always' rules: applied whenever the program starts while Vanta is running, game or not. Realtime priority is never allowed."/>
+                    <ItemsControl ItemsSource="{Binding Rules}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="{x:Type vm:ProcessRuleVm}">
+                                <DockPanel Margin="0,0,0,6">
+                                    <Button DockPanel.Dock="Right" Content="Remove" Padding="10,4" Margin="8,0,0,0"
+                                            Command="{Binding DataContext.RemoveRuleCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                            CommandParameter="{Binding}"/>
+                                    <CheckBox DockPanel.Dock="Left" Style="{StaticResource SwitchStyle}" IsChecked="{Binding Enabled}" Margin="0,0,10,0"/>
+                                    <TextBlock VerticalAlignment="Center">
+                                        <Run Text="{Binding ProcessName, Mode=OneWay}" FontWeight="SemiBold"/>
+                                        <Run Text="{Binding Summary, Mode=OneWay}" Foreground="{StaticResource MutedBrush}"/>
+                                    </TextBlock>
+                                </DockPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <Grid Margin="0,6,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="160"/>
+                            <ColumnDefinition Width="260"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox Text="{Binding NewRuleName, UpdateSourceTrigger=PropertyChanged}" ToolTip="Process name, e.g. obs64"/>
+                        <ComboBox Grid.Column="1" Margin="8,0,0,0" ItemsSource="{x:Static vm:CpuPowerTabViewModel.PriorityOptions}"
+                                  DisplayMemberPath="Label" SelectedValuePath="Value" SelectedValue="{Binding NewRulePriority}"/>
+                        <ComboBox Grid.Column="2" Margin="8,0,0,0" ItemsSource="{x:Static vm:ProfileEditorVm.AffinityOptions}"
+                                  DisplayMemberPath="Label" SelectedValuePath="Value" SelectedValue="{Binding NewRuleAffinity}"/>
+                        <Button Grid.Column="3" Content="Add rule" Margin="8,0,0,0" Command="{Binding AddRuleCommand}"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- Scheduler tweaks -->
+            <Border Style="{StaticResource Card}" Margin="0,12,0,0">
+                <StackPanel>
+                    <TextBlock Text="Scheduler tweaks" Style="{StaticResource H2}" Margin="0,0,0,10"/>
+                    <ItemsControl DataContext="{Binding Tweaks}" ItemsSource="{Binding Items}" ItemTemplate="{StaticResource TweakCard}"/>
+                    <TextBlock DataContext="{Binding Tweaks}" Text="{Binding Notice}" Foreground="{StaticResource WarnBrush}" TextWrapping="Wrap"
+                               Visibility="{Binding Notice, Converter={StaticResource StringToVis}}"/>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

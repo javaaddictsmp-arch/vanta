@@ -1,0 +1,357 @@
+{
+  // In-game config presets. Adding a game = adding an entry here (or a .json file with the same
+  // shape in %LocalAppData%\Vanta\GamePresets). Formats: ini, kv, colon, guide.
+  // onlyExistingKeys (default true) means a preset never adds keys your file does not already have.
+  // These are honest starting points, not lab-tested magic numbers: always check in game.
+  "games": [
+    {
+      "id": "cs2",
+      "name": "Counter-Strike 2",
+      "format": "kv",
+      "paths": [ "{steam}\\userdata\\*\\730\\local\\cfg\\cs2_video.txt" ],
+      "notes": "Close CS2 before applying, or it overwrites the file on exit. Competitive players usually keep everything low except texture detail for visibility.",
+      "tips": [
+        "NVIDIA Reflex (r_low_latency) 'Enabled' lowers input lag when you are GPU-bound; leave Boost off unless you are clearly GPU-limited.",
+        "Launch option '-fullscreen' is enough; old CS:GO options like -high or -threads don't help in CS2.",
+        "Cap FPS with fps_max a little above your typical lows for steadier frametimes."
+      ],
+      "presets": {
+        "Max FPS": {
+          "setting.mat_vsync": "0",
+          "setting.msaa_samples": "0",
+          "setting.r_csgo_cmaa_enable": "0",
+          "setting.shaderquality": "0",
+          "setting.r_texturefilteringquality": "0",
+          "setting.r_particle_max_detail_level": "0",
+          "setting.r_aoproxy_enable": "0",
+          "setting.sc_hdr_enabled_override": "3",
+          "setting.r_low_latency": "1",
+          "setting.cpu_level": "0",
+          "setting.gpu_level": "0"
+        },
+        "Balanced": {
+          "setting.mat_vsync": "0",
+          "setting.msaa_samples": "2",
+          "setting.shaderquality": "0",
+          "setting.r_texturefilteringquality": "2",
+          "setting.r_aoproxy_enable": "0",
+          "setting.r_low_latency": "1",
+          "setting.cpu_level": "1",
+          "setting.gpu_level": "1"
+        },
+        "Visual quality": {
+          "setting.mat_vsync": "0",
+          "setting.msaa_samples": "4",
+          "setting.shaderquality": "1",
+          "setting.r_texturefilteringquality": "5",
+          "setting.r_aoproxy_enable": "1",
+          "setting.r_low_latency": "1",
+          "setting.cpu_level": "3",
+          "setting.gpu_level": "3"
+        }
+      },
+      "presetNotes": {
+        "Max FPS": "Lowest settings, MSAA off, HDR set to Performance, Reflex on.",
+        "Visual quality": "MSAA 4x, high shaders and anisotropic 16x. Still competitive-friendly."
+      }
+    },
+    {
+      "id": "fortnite",
+      "name": "Fortnite",
+      "format": "ini",
+      "paths": [ "%LOCALAPPDATA%\\FortniteGame\\Saved\\Config\\WindowsClient\\GameUserSettings.ini" ],
+      "notes": "Close Fortnite first. For the biggest jump, switch Rendering Mode to 'Performance' in game (that is a separate DX11 low-end renderer).",
+      "tips": [
+        "Performance rendering mode can more than double FPS on mid-range PCs at the cost of visuals.",
+        "Turn on NVIDIA Reflex 'On + Boost' in game if you are GPU-bound.",
+        "If you set the file read-only to stop Fortnite overwriting it, Vanta keeps that attribute."
+      ],
+      "presets": {
+        "Max FPS": {
+          "ScalabilityGroups/sg.ResolutionQuality": "100",
+          "ScalabilityGroups/sg.ViewDistanceQuality": "1",
+          "ScalabilityGroups/sg.AntiAliasingQuality": "0",
+          "ScalabilityGroups/sg.ShadowQuality": "0",
+          "ScalabilityGroups/sg.GlobalIlluminationQuality": "0",
+          "ScalabilityGroups/sg.ReflectionQuality": "0",
+          "ScalabilityGroups/sg.PostProcessQuality": "0",
+          "ScalabilityGroups/sg.TextureQuality": "1",
+          "ScalabilityGroups/sg.EffectsQuality": "0",
+          "ScalabilityGroups/sg.FoliageQuality": "0",
+          "ScalabilityGroups/sg.ShadingQuality": "0",
+          "/Script/FortniteGame.FortGameUserSettings/bUseVSync": "False",
+          "/Script/FortniteGame.FortGameUserSettings/bMotionBlur": "False",
+          "/Script/FortniteGame.FortGameUserSettings/bShowGrass": "False"
+        },
+        "Balanced": {
+          "ScalabilityGroups/sg.ResolutionQuality": "100",
+          "ScalabilityGroups/sg.ViewDistanceQuality": "2",
+          "ScalabilityGroups/sg.AntiAliasingQuality": "1",
+          "ScalabilityGroups/sg.ShadowQuality": "1",
+          "ScalabilityGroups/sg.GlobalIlluminationQuality": "1",
+          "ScalabilityGroups/sg.ReflectionQuality": "1",
+          "ScalabilityGroups/sg.PostProcessQuality": "1",
+          "ScalabilityGroups/sg.TextureQuality": "2",
+          "ScalabilityGroups/sg.EffectsQuality": "1",
+          "ScalabilityGroups/sg.FoliageQuality": "1",
+          "ScalabilityGroups/sg.ShadingQuality": "1",
+          "/Script/FortniteGame.FortGameUserSettings/bUseVSync": "False",
+          "/Script/FortniteGame.FortGameUserSettings/bMotionBlur": "False"
+        },
+        "Visual quality": {
+          "ScalabilityGroups/sg.ResolutionQuality": "100",
+          "ScalabilityGroups/sg.ViewDistanceQuality": "3",
+          "ScalabilityGroups/sg.AntiAliasingQuality": "3",
+          "ScalabilityGroups/sg.ShadowQuality": "3",
+          "ScalabilityGroups/sg.GlobalIlluminationQuality": "3",
+          "ScalabilityGroups/sg.ReflectionQuality": "3",
+          "ScalabilityGroups/sg.PostProcessQuality": "3",
+          "ScalabilityGroups/sg.TextureQuality": "3",
+          "ScalabilityGroups/sg.EffectsQuality": "3",
+          "ScalabilityGroups/sg.FoliageQuality": "3",
+          "ScalabilityGroups/sg.ShadingQuality": "3"
+        }
+      }
+    },
+    {
+      "id": "apex",
+      "name": "Apex Legends",
+      "format": "kv",
+      "paths": [ "{savedgames}\\Respawn\\Apex\\local\\videoconfig.txt" ],
+      "notes": "Close Apex first. Apex caps at 144 FPS by default unless you add '+fps_max 0' (or your cap) to the launch options.",
+      "tips": [ "Launch option '+fps_max 0' removes the default cap; '+fps_max 237' suits a 240 Hz VRR monitor." ],
+      "presets": {
+        "Max FPS": {
+          "setting.mat_vsync_mode": "0",
+          "setting.mat_antialias_mode": "0",
+          "setting.csm_enabled": "0",
+          "setting.shadow_enable": "0",
+          "setting.ssao_enabled": "0",
+          "setting.volumetric_lighting": "0",
+          "setting.r_lod_switch_scale": "0.6",
+          "setting.particle_cpu_level": "0",
+          "setting.r_decals": "0",
+          "setting.mat_depthfeather_enable": "0",
+          "setting.dvs_enable": "0"
+        },
+        "Balanced": {
+          "setting.mat_vsync_mode": "0",
+          "setting.mat_antialias_mode": "12",
+          "setting.csm_enabled": "1",
+          "setting.shadow_enable": "1",
+          "setting.ssao_enabled": "0",
+          "setting.volumetric_lighting": "0",
+          "setting.r_lod_switch_scale": "1",
+          "setting.particle_cpu_level": "1"
+        },
+        "Visual quality": {
+          "setting.mat_vsync_mode": "0",
+          "setting.mat_antialias_mode": "12",
+          "setting.csm_enabled": "1",
+          "setting.shadow_enable": "1",
+          "setting.ssao_enabled": "1",
+          "setting.volumetric_lighting": "1",
+          "setting.r_lod_switch_scale": "1",
+          "setting.particle_cpu_level": "2"
+        }
+      }
+    },
+    {
+      "id": "minecraft-java",
+      "name": "Minecraft: Java Edition",
+      "format": "colon",
+      "paths": [ "%APPDATA%\\.minecraft\\options.txt" ],
+      "notes": "Close Minecraft first. The biggest FPS gain by far comes from performance mods, not settings (see tips).",
+      "tips": [
+        "Install Fabric with Sodium (rendering), Lithium (game logic) and FerriteCore (memory). Sodium alone often gives 2-3x FPS.",
+        "Iris adds shader support on top of Sodium if you want shaders.",
+        "Recommended JVM args for 16 GB+ PCs: -Xms4G -Xmx4G -XX:+UseG1GC -XX:MaxGCPauseMillis=50. Giving Minecraft more than 6-8 GB usually hurts (longer garbage-collection pauses) unless you run big modpacks.",
+        "Use the Java version the launcher bundles; don't install an old system Java."
+      ],
+      "presets": {
+        "Max FPS": {
+          "renderDistance": "8",
+          "simulationDistance": "6",
+          "graphicsMode": "0",
+          "maxFps": "260",
+          "enableVsync": "false",
+          "entityShadows": "false",
+          "particles": "2",
+          "ao": "false",
+          "biomeBlendRadius": "0",
+          "mipmapLevels": "0",
+          "renderClouds": "\"false\"",
+          "entityDistanceScaling": "0.5"
+        },
+        "Balanced": {
+          "renderDistance": "12",
+          "simulationDistance": "8",
+          "graphicsMode": "0",
+          "maxFps": "260",
+          "enableVsync": "false",
+          "entityShadows": "true",
+          "particles": "1",
+          "ao": "true",
+          "biomeBlendRadius": "2",
+          "renderClouds": "\"fast\""
+        },
+        "Visual quality": {
+          "renderDistance": "16",
+          "simulationDistance": "10",
+          "graphicsMode": "1",
+          "enableVsync": "false",
+          "entityShadows": "true",
+          "particles": "0",
+          "ao": "true",
+          "biomeBlendRadius": "4",
+          "mipmapLevels": "4",
+          "renderClouds": "\"true\""
+        }
+      },
+      "presetNotes": { "Max FPS": "maxFps 260 means 'Unlimited' in the video settings slider." }
+    },
+    {
+      "id": "rocket-league",
+      "name": "Rocket League",
+      "format": "ini",
+      "paths": [ "{documents}\\My Games\\Rocket League\\TAGame\\Config\\TASystemSettings.ini" ],
+      "notes": "Close Rocket League first. Most competitive players turn off everything except what helps visibility.",
+      "presets": {
+        "Max FPS": {
+          "SystemSettings/DynamicShadows": "False",
+          "SystemSettings/LightShafts": "False",
+          "SystemSettings/Bloom": "False",
+          "SystemSettings/MotionBlur": "False",
+          "SystemSettings/AmbientOcclusion": "False",
+          "SystemSettings/DepthOfField": "False",
+          "SystemSettings/LensFlares": "False",
+          "SystemSettings/bAllowLightShafts": "False",
+          "SystemSettings/UseVsync": "False"
+        },
+        "Balanced": {
+          "SystemSettings/DynamicShadows": "False",
+          "SystemSettings/MotionBlur": "False",
+          "SystemSettings/DepthOfField": "False",
+          "SystemSettings/Bloom": "True",
+          "SystemSettings/UseVsync": "False"
+        },
+        "Visual quality": {
+          "SystemSettings/DynamicShadows": "True",
+          "SystemSettings/LightShafts": "True",
+          "SystemSettings/Bloom": "True",
+          "SystemSettings/AmbientOcclusion": "True",
+          "SystemSettings/MotionBlur": "False",
+          "SystemSettings/UseVsync": "False"
+        }
+      }
+    },
+    {
+      "id": "league",
+      "name": "League of Legends",
+      "format": "ini",
+      "paths": [ "C:\\Riot Games\\League of Legends\\Config\\game.cfg" ],
+      "notes": "Close League (and the client) first. Riot may sync some settings from your account.",
+      "presets": {
+        "Max FPS": {
+          "General/WaitForVerticalSync": "0",
+          "Performance/ShadowQuality": "0",
+          "Performance/CharacterQuality": "1",
+          "Performance/EnvironmentQuality": "0",
+          "Performance/EffectsQuality": "0",
+          "Performance/EnableHUDAnimations": "0",
+          "Performance/EnableGrassSwaying": "0"
+        },
+        "Balanced": {
+          "General/WaitForVerticalSync": "0",
+          "Performance/ShadowQuality": "1",
+          "Performance/CharacterQuality": "2",
+          "Performance/EnvironmentQuality": "2",
+          "Performance/EffectsQuality": "2"
+        },
+        "Visual quality": {
+          "General/WaitForVerticalSync": "0",
+          "Performance/ShadowQuality": "4",
+          "Performance/CharacterQuality": "4",
+          "Performance/EnvironmentQuality": "4",
+          "Performance/EffectsQuality": "4"
+        }
+      }
+    },
+    {
+      "id": "valorant",
+      "name": "VALORANT",
+      "format": "guide",
+      "notes": "VALORANT stores video settings on your Riot account and re-downloads them, so Vanta does not edit its files. Vanguard is a kernel anti-cheat: Vanta only uses normal Windows APIs and never touches the game process beyond priority if Windows allows it.",
+      "tips": [
+        "Low/Off for Material, Texture, Detail, UI quality; Vignette off; Anti-aliasing MSAA 2x or None; Anisotropic 4x.",
+        "NVIDIA Reflex: 'On + Boost' if GPU-bound.",
+        "Multithreaded rendering: On (helps nearly every modern CPU).",
+        "VALORANT is usually CPU-bound: RAM speed (XMP/EXPO) matters more than GPU settings."
+      ]
+    },
+    {
+      "id": "warzone",
+      "name": "Call of Duty: Warzone / Black Ops / MW",
+      "format": "guide",
+      "notes": "Call of Duty keeps settings in a binary-ish options file that changes with every season, so Vanta gives guidance instead of editing it. Ricochet is a kernel anti-cheat; Vanta does not touch the game process beyond what Windows allows.",
+      "tips": [
+        "Use DLSS/FSR Quality (or Balanced at 1440p+) for the biggest FPS gain.",
+        "Lower shadow map resolution, volumetric quality, and screen-space reflections first.",
+        "Set 'VRAM Scale Target' to about 80-90% to avoid VRAM stutter.",
+        "On-demand texture streaming can cause stutter on slow connections; turn it off if so."
+      ]
+    },
+    {
+      "id": "overwatch2",
+      "name": "Overwatch 2",
+      "format": "guide",
+      "notes": "Overwatch 2's Settings_v0.ini is rewritten and partly synced by Battle.net, so editing it is unreliable. Use these in-game settings instead.",
+      "tips": [
+        "Render scale 100% (or Custom with FSR 2 for more FPS), Texture Quality Medium, everything else Low.",
+        "NVIDIA Reflex: 'Enabled + Boost'. Reduce Buffering: On.",
+        "Cap FPS a little below your typical minimum for consistent aim."
+      ]
+    },
+    {
+      "id": "roblox",
+      "name": "Roblox",
+      "format": "guide",
+      "notes": "Roblox's graphics quality is a slider in the in-game menu. Third-party FPS unlockers and 'FastFlags' tools modify the client; avoid them since they can break Roblox's terms of use. Roblox now offers a built-in max frame rate option in settings.",
+      "tips": [
+        "Set Graphics Mode to Manual and lower the slider until FPS is stable.",
+        "Use the built-in 'Maximum Frame Rate' option instead of unlockers."
+      ]
+    },
+    {
+      "id": "gta5",
+      "name": "Grand Theft Auto V",
+      "format": "guide",
+      "notes": "GTA V's settings.xml is easy to break and the game resets it on version changes; use the in-game menu (Enhanced edition supports DLSS/FSR).",
+      "tips": [
+        "Biggest FPS hitters: MSAA, grass quality, shadow quality, and 'Extended distance scaling'.",
+        "Keep Population Density/Variety moderate on 4-6 core CPUs."
+      ]
+    },
+    {
+      "id": "cyberpunk",
+      "name": "Cyberpunk 2077",
+      "format": "guide",
+      "notes": "Settings live in a large UserSettings.json that changes with patches; use the in-game presets.",
+      "tips": [
+        "Path tracing/ray tracing are the biggest hit; DLSS/FSR with Frame Generation if your GPU supports it.",
+        "Crowd density 'Low' helps a lot when CPU-bound.",
+        "Install on an SSD; the game is designed for SSD streaming."
+      ]
+    },
+    {
+      "id": "eldenring",
+      "name": "Elden Ring",
+      "format": "guide",
+      "notes": "Elden Ring is capped at 60 FPS by design. Removing the cap needs mods that disable online play (Easy Anti-Cheat); Vanta does not do that.",
+      "tips": [
+        "If you stutter, it is mostly shader compilation on first visits; it improves as the shader cache fills. Don't clear the shader cache.",
+        "Set the in-game 'Auto-detect best rendering settings' off and lower Shadow and Grass quality first."
+      ]
+    }
+  ]
+}

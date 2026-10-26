@@ -1,0 +1,18 @@
+# Build output
+bin/
+obj/
+publish/
+publish-new/
+installer/Output/
+/Vanta/
+*.zip
+*.user
+.vs/
+.claude/
+
+# Personal setup notes
+GITHUB-SETUP.md
+
+# Local logs from the helper scripts
+build.log
+install.log

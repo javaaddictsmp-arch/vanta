@@ -1,0 +1,94 @@
+<UserControl x:Class="TuneUp.Views.Boost.GameConfigTab"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:TuneUp.ViewModels"
+             xmlns:c="clr-namespace:TuneUp.Controls">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="320"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <Border Style="{StaticResource Card}" Padding="10" Margin="0,0,12,12">
+            <DockPanel>
+                <DockPanel DockPanel.Dock="Top" Margin="4,0,4,8">
+                    <Button DockPanel.Dock="Right" Content="Import presets" Style="{StaticResource LinkButton}" Command="{Binding ImportPresetsCommand}"/>
+                    <TextBlock Text="Games" Style="{StaticResource H2}"/>
+                </DockPanel>
+                <ListBox ItemsSource="{Binding Games}" SelectedItem="{Binding Selected}" Style="{StaticResource PlainList}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate DataType="{x:Type vm:GameConfigRowVm}">
+                            <StackPanel>
+                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold"/>
+                                <TextBlock Text="{Binding Status}" Style="{StaticResource MutedText}" FontSize="11.5"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </DockPanel>
+        </Border>
+
+        <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="0,0,4,24" DataContext="{Binding Selected}"
+                        Visibility="{Binding Converter={StaticResource NotNullToVis}}">
+                <c:Explainer Text="Pick a game on the left, then a preset: 'Max FPS' is the smoothest, 'Visual quality' the prettiest, 'Balanced' in between. Close the game first. Vanta saves a backup of your settings so you can always go back."/>
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Text="{Binding Name}" Style="{StaticResource H2}" FontSize="17"/>
+                        <TextBlock Text="{Binding Notes}" TextWrapping="Wrap" Margin="0,8,0,0"/>
+
+                        <StackPanel Visibility="{Binding IsGuide, Converter={StaticResource InvBoolToVis}}">
+                            <TextBlock Margin="0,12,0,0" TextWrapping="Wrap">
+                                <Run Text="Config file: " Foreground="{StaticResource MutedBrush}"/>
+                                <Run Text="{Binding ConfigPath, Mode=OneWay, TargetNullValue='not found yet (launch the game once)'}"/>
+                            </TextBlock>
+                            <TextBlock Text="Presets (only change settings that already exist in your file)" Margin="0,14,0,8"
+                                       Foreground="{StaticResource MutedBrush}"/>
+                            <ItemsControl ItemsSource="{Binding PresetNames}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Button Content="{Binding}" Style="{StaticResource AccentButton}" Margin="0,0,8,8"
+                                                Command="{Binding DataContext.ApplyPresetCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}"/>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                <Button Margin="0,0,8,0"
+                                        Command="{Binding DataContext.RestoreBackupCommand, RelativeSource={RelativeSource AncestorType=UserControl}}">
+                                    <TextBlock Text="{Binding BackupCount, StringFormat='Restore last backup ({0} saved)'}"/>
+                                </Button>
+                                <Button Content="Show file"
+                                        Command="{Binding DataContext.OpenFolderCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <Border Style="{StaticResource Note}" Margin="0,12,0,0"
+                                Visibility="{Binding DataContext.Message, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource StringToVis}}">
+                            <TextBlock Text="{Binding DataContext.Message, RelativeSource={RelativeSource AncestorType=UserControl}}" TextWrapping="Wrap"/>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource Card}" Margin="0,12,0,0">
+                    <StackPanel>
+                        <TextBlock Text="Tips" Style="{StaticResource H2}" Margin="0,0,0,8"/>
+                        <ItemsControl ItemsSource="{Binding Tips}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding StringFormat='•  {0}'}" TextWrapping="Wrap" Margin="0,3"/>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <TextBlock Style="{StaticResource MutedText}" FontSize="12" Margin="2,12,0,0"
+                           Text="Presets are honest starting points, not lab-verified numbers. Adding a game is one JSON entry: see Data/gamepresets.json, or drop a .json into %LocalAppData%\Vanta\GamePresets."/>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

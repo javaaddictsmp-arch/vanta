@@ -1,0 +1,220 @@
+﻿<UserControl x:Class="TuneUp.Views.StartupView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:TuneUp.Controls"
+             xmlns:vm="clr-namespace:TuneUp.ViewModels"
+             xmlns:s="clr-namespace:TuneUp.Services"
+             Style="{StaticResource ViewFade}">
+    <UserControl.Resources>
+        <!-- 0 = safe to disable (green), 1 = your call (muted), 2 = keep (accent) -->
+        <Style x:Key="AdviceText" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11.5"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{StaticResource MutedBrush}"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding AdviceLevel}" Value="0"><Setter Property="Foreground" Value="{StaticResource GoodBrush}"/></DataTrigger>
+                <DataTrigger Binding="{Binding AdviceLevel}" Value="2"><Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/></DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Margin="32,26,32,0">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Margin="0,0,0,16">
+            <TextBlock Text="Startup &amp; Services" Style="{StaticResource H1}"/>
+            <TextBlock Style="{StaticResource MutedText}" Margin="0,4,0,0"
+                       Text="Control what starts with Windows and what runs in the background."/>
+        </StackPanel>
+
+        <TabControl Grid.Row="1" SelectedIndex="{Binding SelectedTab}">
+
+            <!-- ============================== Startup apps ============================== -->
+            <TabItem Header="Startup apps">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <c:Explainer Text="These programs open by themselves when you log in. Fewer startup apps means Windows is ready sooner and less runs in the background while you play. Switching one off doesn't uninstall it: you can still open it yourself, and switching it back on is one click."/>
+                    <DockPanel Grid.Row="1" Margin="0,0,0,10">
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                            <Button Content="Open Task Manager" Command="{Binding OpenTaskManagerStartupCommand}" Margin="0,0,8,0"
+                                    ToolTip="Task Manager shows Windows' own 'startup impact' estimate for each app."/>
+                            <Button Content="Refresh" Command="{Binding LoadStartupCommand}"/>
+                        </StackPanel>
+                        <TextBlock Text="{Binding StartupStatus}" VerticalAlignment="Center" Style="{StaticResource MutedText}"/>
+                    </DockPanel>
+                    <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding StartupItems}" Margin="0,0,6,24">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="{x:Type vm:StartupRowVm}">
+                                    <Border Style="{StaticResource HoverCard}" Padding="16,12" Margin="0,0,0,8">
+                                        <DockPanel>
+                                            <CheckBox DockPanel.Dock="Right" Style="{StaticResource SwitchStyle}" IsChecked="{Binding IsEnabled}"
+                                                      IsEnabled="{Binding IsBusy, Converter={StaticResource InvBool}}" VerticalAlignment="Center"
+                                                      ToolTip="Starts with Windows"/>
+                                            <StackPanel Margin="0,0,16,0">
+                                                <WrapPanel>
+                                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="14" Margin="0,0,10,2"/>
+                                                    <Border Style="{StaticResource Chip}" Background="#12FFFFFF" Margin="0,0,6,2">
+                                                        <TextBlock Text="{Binding AdviceTag}" Style="{StaticResource AdviceText}"/>
+                                                    </Border>
+                                                    <Border Style="{StaticResource Chip}" Background="#12FFFFFF" Margin="0,0,6,2">
+                                                        <TextBlock Text="{Binding SourceText}" FontSize="11" Foreground="{StaticResource MutedBrush}"/>
+                                                    </Border>
+                                                </WrapPanel>
+                                                <TextBlock Text="{Binding Advice}" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                                <TextBlock Style="{StaticResource MutedText}" FontSize="11.5" Margin="0,3,0,0" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap"
+                                                           ToolTip="{Binding Item.Command}">
+                                                    <Run Text="{Binding Publisher, Mode=OneWay}"/>
+                                                    <Run Text="{Binding Item.Command, Mode=OneWay}"/>
+                                                </TextBlock>
+                                            </StackPanel>
+                                        </DockPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+            </TabItem>
+
+            <!-- ============================== Services ============================== -->
+            <TabItem Header="Services" Visibility="{Binding IsAdvanced, Source={x:Static vm:UiMode.Instance}, Converter={StaticResource BoolToVis}}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="0,0,6,24">
+                        <c:Explainer Text="Services are Windows programs that run quietly in the background. Vanta only offers ones that are safe to turn off for most people; anything important (internet, sound, updates, security) is never on this list. Pick a preset or change them one by one."/>
+
+                        <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                            <StackPanel>
+                                <TextBlock Text="Presets" Style="{StaticResource H2}"/>
+                                <TextBlock Style="{StaticResource MutedText}" Margin="0,2,0,10"
+                                           Text="Gaming keeps everything games and Xbox need. Work also turns off Xbox services. Minimal goes further (printing, search indexing, Windows Hello) and is for people who know they don't use those."/>
+                                <WrapPanel>
+                                    <Button Content="Gaming" Style="{StaticResource AccentButton}" Command="{Binding ApplyPresetCommand}" CommandParameter="Gaming" Margin="0,0,8,0"/>
+                                    <Button Content="Work" Command="{Binding ApplyPresetCommand}" CommandParameter="Work" Margin="0,0,8,0"/>
+                                    <Button Content="Minimal (advanced)" Command="{Binding ApplyPresetCommand}" CommandParameter="Minimal"/>
+                                </WrapPanel>
+                                <TextBlock Text="{Binding ServicesStatus}" Margin="0,10,0,0" TextWrapping="Wrap" Foreground="{DynamicResource AccentBrush}"
+                                           Visibility="{Binding ServicesStatus, Converter={StaticResource StringToVis}}"/>
+                            </StackPanel>
+                        </Border>
+
+                        <ItemsControl ItemsSource="{Binding Services}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="{x:Type vm:ServiceRowVm}">
+                                    <Border Style="{StaticResource HoverCard}" Padding="16,12" Margin="0,0,0,8">
+                                        <DockPanel>
+                                            <Button DockPanel.Dock="Right" Content="{Binding Tweak.ActionText}" MinWidth="96" VerticalAlignment="Center" Margin="12,0,0,0"
+                                                    IsEnabled="{Binding Installed}"
+                                                    Command="{Binding DataContext.ToggleServiceCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding}"/>
+                                            <StackPanel>
+                                                <WrapPanel>
+                                                    <TextBlock Text="{Binding Display}" FontWeight="SemiBold" FontSize="14" Margin="0,0,10,2"/>
+                                                    <Border Style="{StaticResource Chip}" Background="#12FFFFFF" Margin="0,0,6,2">
+                                                        <TextBlock FontSize="11"><Run Text="Now " Foreground="{StaticResource MutedBrush}"/><Run Text="{Binding Current, Mode=OneWay}" FontWeight="SemiBold"/></TextBlock>
+                                                    </Border>
+                                                    <Border Style="{StaticResource Chip}" Background="#12FFFFFF" Margin="0,0,6,2">
+                                                        <TextBlock FontSize="11"><Run Text="Vanta sets " Foreground="{StaticResource MutedBrush}"/><Run Text="{Binding Target, Mode=OneWay}" FontWeight="SemiBold"/></TextBlock>
+                                                    </Border>
+                                                    <Border Style="{StaticResource Chip}" Background="#12FFFFFF" Margin="0,0,6,2">
+                                                        <TextBlock Text="{Binding Presets}" FontSize="11" Foreground="{StaticResource MutedBrush}"/>
+                                                    </Border>
+                                                </WrapPanel>
+                                                <TextBlock Text="{Binding What}" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                                <TextBlock Text="{Binding Warning}" TextWrapping="Wrap" FontSize="12" Margin="0,4,0,0" Foreground="{StaticResource WarnBrush}"
+                                                           Visibility="{Binding Warning, Converter={StaticResource StringToVis}}"/>
+                                            </StackPanel>
+                                        </DockPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- ============================== Processes ============================== -->
+            <TabItem Header="Processes" Visibility="{Binding IsAdvanced, Source={x:Static vm:UiMode.Instance}, Converter={StaticResource BoolToVis}}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="300"/>
+                    </Grid.ColumnDefinitions>
+
+                    <c:Explainer Grid.ColumnSpan="2" Text="Everything running on your PC right now, busiest first. Pick one to change how much attention Windows gives it, freeze it, or close it. Changes last until the program restarts; use CPU &amp; Power > rules to make them permanent."/>
+
+                    <DockPanel Grid.Row="1" Grid.ColumnSpan="2" Margin="0,0,0,10">
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                            <CheckBox Style="{StaticResource SwitchStyle}" IsChecked="{Binding AutoRefresh}" Content="Live" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                            <Button Content="Refresh" Command="{Binding RefreshProcessesCommand}"/>
+                        </StackPanel>
+                        <Grid Width="260" HorizontalAlignment="Left">
+                            <TextBox Text="{Binding ProcessFilter, UpdateSourceTrigger=PropertyChanged}" Padding="32,7,9,7"/>
+                            <TextBlock Text="&#xE721;" FontFamily="Segoe MDL2 Assets" Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" Margin="11,0,0,0" IsHitTestVisible="False"/>
+                        </Grid>
+                    </DockPanel>
+
+                    <ListBox Grid.Row="2" ItemsSource="{Binding Processes}" SelectedItem="{Binding SelectedProcess}" Style="{StaticResource PlainList}"
+                             VirtualizingPanel.IsVirtualizing="True" Margin="0,0,12,12">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate DataType="{x:Type s:ProcessRow}">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="80"/>
+                                        <ColumnDefinition Width="100"/>
+                                        <ColumnDefinition Width="100"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock VerticalAlignment="Center" TextTrimming="CharacterEllipsis">
+                                        <Run Text="{Binding Name, Mode=OneWay}" FontWeight="SemiBold"/>
+                                        <Run Text="{Binding Pid, Mode=OneWay, StringFormat='  {0}'}" Foreground="{StaticResource MutedBrush}" FontSize="11"/>
+                                    </TextBlock>
+                                    <TextBlock Grid.Column="1" Text="{Binding Cpu, StringFormat='{}{0:0.0}% CPU'}" HorizontalAlignment="Right"/>
+                                    <TextBlock Grid.Column="2" Text="{Binding MemoryMb, StringFormat='{}{0:N0} MB'}" HorizontalAlignment="Right"/>
+                                    <TextBlock Grid.Column="3" Text="{Binding Priority}" HorizontalAlignment="Right" Foreground="{StaticResource MutedBrush}"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <Border Grid.Row="2" Grid.Column="1" Style="{StaticResource Card}" VerticalAlignment="Top" Margin="0,0,0,12">
+                        <StackPanel>
+                            <TextBlock Text="{Binding SelectedProcess.Name, FallbackValue='Select a process', TargetNullValue='Select a process'}" Style="{StaticResource H2}"/>
+                            <TextBlock Text="Priority" Style="{StaticResource Eyebrow}" Margin="0,14,0,6"/>
+                            <ItemsControl ItemsSource="{x:Static vm:StartupViewModel.PriorityChoices}">
+                                <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Button Content="{Binding}" Padding="10,5" Margin="0,0,6,6"
+                                                Command="{Binding DataContext.SetPriorityCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"/>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <TextBlock Text="Actions" Style="{StaticResource Eyebrow}" Margin="0,10,0,6"/>
+                            <Button Content="Low disk priority" Command="{Binding SetIoLowCommand}" HorizontalAlignment="Stretch" Margin="0,0,0,6"/>
+                            <Button Content="Suspend during boosts" Command="{Binding AddToBoostListCommand}" HorizontalAlignment="Stretch" Margin="0,0,0,6"/>
+                            <UniformGrid Columns="2" Margin="0,0,0,6">
+                                <Button Content="Freeze" Command="{Binding SuspendCommand}" Margin="0,0,3,0"/>
+                                <Button Content="Resume" Command="{Binding ResumeCommand}" Margin="3,0,0,0"/>
+                            </UniformGrid>
+                            <Button Content="End task" Style="{StaticResource DangerButton}" Command="{Binding EndTaskCommand}" HorizontalAlignment="Stretch"/>
+                            <TextBlock Text="{Binding ProcessStatus}" Style="{StaticResource MutedText}" FontSize="12" Margin="0,12,0,0"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</UserControl>

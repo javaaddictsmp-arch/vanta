@@ -1,0 +1,222 @@
+<UserControl x:Class="TuneUp.Views.DashboardView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:TuneUp.Controls"
+             Style="{StaticResource ViewFade}">
+    <UserControl.Resources>
+        <!-- Numbered step badge for the "Get started" card -->
+        <Style x:Key="StepBadge" TargetType="Border">
+            <Setter Property="Width" Value="30"/>
+            <Setter Property="Height" Value="30"/>
+            <Setter Property="CornerRadius" Value="15"/>
+            <Setter Property="Background" Value="{DynamicResource AccentGradientBrush}"/>
+            <Setter Property="VerticalAlignment" Value="Top"/>
+            <Setter Property="Margin" Value="0,0,14,0"/>
+        </Style>
+        <Style x:Key="StepNumber" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+    </UserControl.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="32,26,32,32">
+
+            <!-- Header -->
+            <Grid Margin="0,0,0,18">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock Text="Dashboard" Style="{StaticResource H1}"/>
+                    <TextBlock Text="{Binding StatusMessage}" Style="{StaticResource MutedText}" Margin="0,4,0,0"
+                               Visibility="{Binding StatusMessage, Converter={StaticResource StringToVis}}"/>
+                </StackPanel>
+                <Button Grid.Column="1" VerticalAlignment="Top" Command="{Binding FullScanCommand}" IsEnabled="{Binding IsNotBusy}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE72C;" FontFamily="Segoe MDL2 Assets" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Rescan PC"/>
+                    </StackPanel>
+                </Button>
+            </Grid>
+
+            <!-- Hero: get started -->
+            <Border CornerRadius="18" Padding="26,24" BorderThickness="1">
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="#221B45" Offset="0"/>
+                        <GradientStop Color="#141726" Offset="0.55"/>
+                        <GradientStop Color="#0F1A24" Offset="1"/>
+                    </LinearGradientBrush>
+                </Border.Background>
+                <Border.BorderBrush>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="#557C5CFF" Offset="0"/>
+                        <GradientStop Color="#2222D3EE" Offset="1"/>
+                    </LinearGradientBrush>
+                </Border.BorderBrush>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="300"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel>
+                        <TextBlock Text="GET STARTED" Style="{StaticResource Eyebrow}" Foreground="{DynamicResource AccentBrush}"/>
+                        <TextBlock Text="Three steps to a smoother PC" FontSize="24" FontWeight="Bold" Margin="0,4,0,0"/>
+                        <TextBlock Style="{StaticResource MutedText}" Margin="0,4,0,18"
+                                   Text="No PC knowledge needed. Everything Vanta changes can be undone from the Change Log."/>
+
+                        <DockPanel Margin="0,0,0,16">
+                            <Border Style="{StaticResource StepBadge}"><TextBlock Text="1" Style="{StaticResource StepNumber}"/></Border>
+                            <StackPanel>
+                                <TextBlock Text="Apply the safe basics" FontWeight="SemiBold" FontSize="14.5"/>
+                                <TextBlock Style="{StaticResource MutedText}" Margin="0,2,0,0"
+                                           Text="'Optimize now' only applies changes that are low-risk and proven to help. You see the list before anything happens."/>
+                            </StackPanel>
+                        </DockPanel>
+
+                        <DockPanel Margin="0,0,0,16">
+                            <Border Style="{StaticResource StepBadge}"><TextBlock Text="2" Style="{StaticResource StepNumber}"/></Border>
+                            <StackPanel>
+                                <TextBlock Text="Just play" FontWeight="SemiBold" FontSize="14.5"/>
+                                <TextBlock Style="{StaticResource MutedText}" Margin="0,2,0,0"
+                                           Text="The Game Booster switches on by itself when you start a game and puts everything back when you quit."/>
+                                <Button Content="Open Game Booster  &#x2192;" Style="{StaticResource LinkButton}" HorizontalAlignment="Left"
+                                        Margin="-6,4,0,0" Command="{Binding OpenBoosterCommand}"/>
+                            </StackPanel>
+                        </DockPanel>
+
+                        <DockPanel>
+                            <Border Style="{StaticResource StepBadge}"><TextBlock Text="3" Style="{StaticResource StepNumber}"/></Border>
+                            <StackPanel>
+                                <TextBlock Text="See the real difference" FontWeight="SemiBold" FontSize="14.5"/>
+                                <TextBlock Style="{StaticResource MutedText}" Margin="0,2,0,0"
+                                           Text="Record a short before/after benchmark. Vanta tells you honestly if a change helped or not."/>
+                                <Button Content="Open Benchmark  &#x2192;" Style="{StaticResource LinkButton}" HorizontalAlignment="Left"
+                                        Margin="-6,4,0,0" Command="{Binding OpenBenchmarkCommand}"/>
+                            </StackPanel>
+                        </DockPanel>
+                    </StackPanel>
+
+                    <!-- Health + main action -->
+                    <StackPanel Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <c:RingGauge Width="190" Height="190" Thickness="13"
+                                     Value="{Binding HealthScore}" Text="{Binding HealthScore}" SubText="health score"
+                                     ArcBrush="{Binding HealthLevel, Converter={StaticResource LevelToBrush}}"
+                                     TrackBrush="#22FFFFFF"/>
+                        <TextBlock Text="{Binding HealthLabel}" HorizontalAlignment="Center" FontWeight="SemiBold" FontSize="15" Margin="0,4,0,14"/>
+                        <Button Style="{StaticResource HeroButton}" Command="{Binding QuickOptimizeCommand}" IsEnabled="{Binding IsNotBusy}"
+                                HorizontalAlignment="Stretch">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE945;" FontFamily="Segoe MDL2 Assets" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Optimize now"/>
+                            </StackPanel>
+                        </Button>
+                        <TextBlock Text="Safe + proven tweaks only" Style="{StaticResource MutedText}" FontSize="11.5"
+                                   HorizontalAlignment="Center" Margin="0,8,0,0"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Live gauges -->
+            <DockPanel Margin="2,26,0,12">
+                <TextBlock DockPanel.Dock="Right" Text="Updates every second" Style="{StaticResource MutedText}" FontSize="12" VerticalAlignment="Center"/>
+                <TextBlock Text="Right now" Style="{StaticResource H2}" FontSize="17"/>
+            </DockPanel>
+            <ItemsControl ItemsSource="{Binding Gauges}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <UniformGrid Columns="4"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Style="{StaticResource HoverCard}" Margin="0,0,12,12" Padding="14,12">
+                            <StackPanel>
+                                <TextBlock Text="{Binding Title}" Style="{StaticResource MutedText}" FontSize="12"/>
+                                <c:RingGauge Width="120" Height="120" Margin="0,6,0,0" Thickness="10"
+                                             Value="{Binding Value}" Text="{Binding Text}" SubText="{Binding SubText}"
+                                             TrackBrush="#1FFFFFFF"
+                                             ArcBrush="{Binding Level, Converter={StaticResource LevelToBrush}}"/>
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <!-- Summary + breakdown -->
+            <Grid Margin="0,14,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <Border Style="{StaticResource Card}" Margin="0,0,6,0" VerticalAlignment="Top">
+                    <StackPanel>
+                        <TextBlock Text="Your PC" Style="{StaticResource H2}" Margin="0,0,0,4"/>
+                        <TextBlock Text="What is inside your computer, read straight from Windows."
+                                   Style="{StaticResource MutedText}" FontSize="12" Margin="0,0,0,14"/>
+                        <ItemsControl ItemsSource="{Binding Summary}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,0,0,12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="115"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{Binding Label}" Style="{StaticResource MutedText}"/>
+                                        <StackPanel Grid.Column="1">
+                                            <TextBlock Text="{Binding Value}" TextWrapping="Wrap"/>
+                                            <TextBlock Text="{Binding Note}" Style="{StaticResource MutedText}" FontSize="12"
+                                                       Visibility="{Binding Note, Converter={StaticResource StringToVis}}"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="1" Style="{StaticResource Card}" Margin="6,0,0,0" VerticalAlignment="Top">
+                    <StackPanel>
+                        <TextBlock Text="Health check" Style="{StaticResource H2}" Margin="0,0,0,4"/>
+                        <TextBlock Text="Anything that costs points is listed first, with how to fix it."
+                                   Style="{StaticResource MutedText}" FontSize="12" Margin="0,0,0,14"/>
+                        <ItemsControl ItemsSource="{Binding HealthItems}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,0,0,12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="16"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Ellipse Width="8" Height="8" VerticalAlignment="Top" Margin="0,5,0,0"
+                                                 Fill="{Binding Severity, Converter={StaticResource SeverityToBrush}}"/>
+                                        <StackPanel Grid.Column="1">
+                                            <TextBlock TextWrapping="Wrap">
+                                                <Run Text="{Binding Category, Mode=OneWay}" FontWeight="SemiBold"/>
+                                                <Run Text=" - "/>
+                                                <Run Text="{Binding Message, Mode=OneWay}"/>
+                                            </TextBlock>
+                                            <TextBlock Text="{Binding Fix}" Style="{StaticResource MutedText}" FontSize="12"
+                                                       Visibility="{Binding Fix, Converter={StaticResource StringToVis}}"/>
+                                        </StackPanel>
+                                        <TextBlock Grid.Column="2" Text="{Binding Points}" Margin="12,0,0,0" FontWeight="SemiBold"
+                                                   Foreground="{Binding Severity, Converter={StaticResource SeverityToBrush}}"
+                                                   Visibility="{Binding Fix, Converter={StaticResource StringToVis}}"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

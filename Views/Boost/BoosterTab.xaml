@@ -1,0 +1,273 @@
+<UserControl x:Class="TuneUp.Views.Boost.BoosterTab"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:TuneUp.ViewModels"
+             xmlns:c="clr-namespace:TuneUp.Controls">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Toolbar -->
+        <DockPanel Margin="0,0,0,10">
+            <CheckBox DockPanel.Dock="Left" Style="{StaticResource SwitchStyle}" IsChecked="{Binding BoosterEnabled}"
+                      Content="Auto-boost when a game starts" VerticalAlignment="Center"/>
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                <Button Content="Rescan games" Command="{Binding RescanCommand}" Margin="0,0,8,0"/>
+                <Button Content="Add game EXE" Command="{Binding AddGameCommand}" Margin="0,0,8,0"/>
+                <Button Content="Import profiles" Command="{Binding ImportProfilesCommand}" Margin="0,0,8,0"/>
+                <Button Content="Export all" Command="{Binding ExportAllCommand}"/>
+            </StackPanel>
+            <TextBlock Text="{Binding StatusMessage}" Style="{StaticResource MutedText}" VerticalAlignment="Center" Margin="16,0"/>
+        </DockPanel>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="340"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Left: games + activity -->
+            <Grid Margin="0,0,12,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="200"/>
+                </Grid.RowDefinitions>
+
+                <Border Style="{StaticResource Card}" Padding="10">
+                    <DockPanel>
+                        <DockPanel DockPanel.Dock="Top" Margin="4,0,4,8">
+                            <Button DockPanel.Dock="Right" Content="Edit default profile" Style="{StaticResource LinkButton}"
+                                    Command="{Binding EditDefaultCommand}"/>
+                            <TextBlock Text="Your games" Style="{StaticResource H2}"/>
+                        </DockPanel>
+                        <TextBlock DockPanel.Dock="Top" Text="Scanning..." Style="{StaticResource MutedText}" Margin="4,0,0,6"
+                                   Visibility="{Binding IsScanning, Converter={StaticResource BoolToVis}}"/>
+                        <ListBox ItemsSource="{Binding Games}" SelectedItem="{Binding SelectedGame}" Style="{StaticResource PlainList}">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate DataType="{x:Type vm:GameRowVm}">
+                                    <DockPanel>
+                                        <Ellipse DockPanel.Dock="Left" Width="8" Height="8" Margin="0,0,10,0" VerticalAlignment="Center"
+                                                 Fill="{StaticResource GoodBrush}"
+                                                 Visibility="{Binding IsRunning, Converter={StaticResource BoolToVis}}"/>
+                                        <Button DockPanel.Dock="Right" Content="&#xE711;" FontFamily="Segoe MDL2 Assets" FontSize="10"
+                                                Padding="6,4" ToolTip="Remove this manually added game"
+                                                Visibility="{Binding IsManual, Converter={StaticResource BoolToVis}}"
+                                                Command="{Binding DataContext.RemoveGameCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
+                                                CommandParameter="{Binding}"/>
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                            <WrapPanel Margin="0,4,0,0">
+                                                <Border Style="{StaticResource Chip}" Background="#22FFFFFF">
+                                                    <TextBlock Text="{Binding Launcher}" FontSize="10.5" Foreground="{StaticResource MutedBrush}"/>
+                                                </Border>
+                                                <Border Style="{StaticResource Chip}" Background="#22FFB84D"
+                                                        Visibility="{Binding AntiCheat, Converter={StaticResource StringToVis}}"
+                                                        ToolTip="Kernel anti-cheat detected. Vanta never injects into or modifies this game; priority/affinity may be refused by Windows, which is fine.">
+                                                    <TextBlock Text="{Binding AntiCheat}" FontSize="10.5" Foreground="{StaticResource WarnBrush}"/>
+                                                </Border>
+                                                <Border Style="{StaticResource Chip}" Background="#224F9DFF"
+                                                        Visibility="{Binding HasOwnProfile, Converter={StaticResource BoolToVis}}">
+                                                    <TextBlock Text="own profile" FontSize="10.5" Foreground="{DynamicResource AccentBrush}"/>
+                                                </Border>
+                                                <Border Style="{StaticResource Chip}" Background="#223DDC97"
+                                                        Visibility="{Binding IsBoosted, Converter={StaticResource BoolToVis}}">
+                                                    <TextBlock Text="boosted" FontSize="10.5" Foreground="{StaticResource GoodBrush}"/>
+                                                </Border>
+                                            </WrapPanel>
+                                        </StackPanel>
+                                    </DockPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </DockPanel>
+                </Border>
+
+                <Border Grid.Row="1" Style="{StaticResource Card}" Margin="0,10,0,12" Padding="12,10">
+                    <DockPanel>
+                        <TextBlock DockPanel.Dock="Top" Text="Activity" Style="{StaticResource H2}" Margin="0,0,0,6"/>
+                        <ListBox ItemsSource="{Binding Activity}" Background="Transparent" BorderThickness="0"
+                                 Foreground="{StaticResource MutedBrush}" FontSize="11.5" FontFamily="Consolas"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                            <ListBox.ItemContainerStyle>
+                                <Style TargetType="ListBoxItem">
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="ListBoxItem">
+                                                <TextBlock Text="{Binding}" TextWrapping="Wrap" Margin="0,1"/>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </ListBox.ItemContainerStyle>
+                        </ListBox>
+                    </DockPanel>
+                </Border>
+            </Grid>
+
+            <!-- Right: status + profile editor -->
+            <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto">
+                <StackPanel Margin="0,0,4,24">
+                    <c:Explainer Text="Turn on auto-boost and forget about it. When you start a game, Vanta frees up your PC for it: it pauses background stuff, gives the game priority and switches to a faster power mode. The moment you close the game, everything goes back to normal. The switches below let you choose exactly what happens."/>
+
+                    <!-- Live status -->
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <DockPanel>
+                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Top">
+                                    <Button Content="Boost now" Style="{StaticResource AccentButton}" Command="{Binding BoostNowCommand}"
+                                            Visibility="{Binding IsBoostActive, Converter={StaticResource InvBoolToVis}}"/>
+                                    <Button Content="Stop boost" Style="{StaticResource DangerButton}" Command="{Binding StopBoostCommand}"
+                                            Visibility="{Binding IsBoostActive, Converter={StaticResource BoolToVis}}"/>
+                                </StackPanel>
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Ellipse Width="10" Height="10" Margin="0,0,8,0" VerticalAlignment="Center"
+                                                 Style="{StaticResource PulseDot}" Fill="{StaticResource GoodBrush}"
+                                                 Visibility="{Binding IsBoostActive, Converter={StaticResource BoolToVis}}"/>
+                                        <TextBlock Text="{Binding BoostTitle}" Style="{StaticResource H2}" FontSize="17"/>
+                                    </StackPanel>
+                                    <TextBlock Text="{Binding BoostDetail}" Style="{StaticResource MutedText}" Margin="0,4,0,0"/>
+                                </StackPanel>
+                            </DockPanel>
+                            <ItemsControl ItemsSource="{Binding Steps}" Margin="0,10,0,0">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Margin="0,2">
+                                            <Run Text="&#x2713;  " Foreground="{StaticResource GoodBrush}"/>
+                                            <Run Text="{Binding Mode=OneWay}"/>
+                                        </TextBlock>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Profile editor -->
+                    <Border Style="{StaticResource Card}" Margin="0,12,0,0" DataContext="{Binding Editor}">
+                        <StackPanel>
+                            <DockPanel>
+                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Top">
+                                    <Button Content="Customize for this game" Margin="0,0,8,0"
+                                            Command="{Binding DataContext.CustomizeProfileCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            Visibility="{Binding DataContext.UsingDefault, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BoolToVis}}"/>
+                                    <Button Content="Reset to default" Margin="0,0,8,0"
+                                            Command="{Binding DataContext.ResetProfileCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            Visibility="{Binding DataContext.SelectedGame.HasOwnProfile, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BoolToVis}, FallbackValue=Collapsed}"/>
+                                    <Button Content="Export"
+                                            Command="{Binding DataContext.ExportProfileCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+                                </StackPanel>
+                                <TextBlock Text="{Binding Title}" Style="{StaticResource H2}" TextWrapping="Wrap" VerticalAlignment="Center"/>
+                            </DockPanel>
+
+                            <Border Style="{StaticResource Note}" Margin="0,10,0,0"
+                                    Visibility="{Binding DataContext.UsingDefault, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BoolToVis}}">
+                                <TextBlock TextWrapping="Wrap" FontSize="12"
+                                           Text="This game uses the default profile. Changes here affect all games without their own profile. Click 'Customize for this game' to give it its own settings."/>
+                            </Border>
+
+                            <CheckBox Style="{StaticResource SwitchStyle}" IsChecked="{Binding AutoActivate}" Margin="0,14,0,0"
+                                      Content="Boost automatically when this game starts"/>
+
+                            <!-- Process -->
+                            <TextBlock Text="CPU and process" Style="{StaticResource H2}" Margin="0,18,0,8" Foreground="{StaticResource MutedBrush}"/>
+                            <CheckBox Style="{StaticResource SwitchStyle}" IsChecked="{Binding HighPriority}" Content="Set the game to High priority (never Realtime)"/>
+                            <TextBlock Style="{StaticResource MutedText}" FontSize="12" Margin="50,2,0,8"
+                                       Text="Situational: helps when background apps compete for CPU. Windows may refuse for some anti-cheat games; Vanta then skips it."/>
+                            <CheckBox Style="{StaticResource SwitchStyle}" IsChecked="{Binding ProBalance}" Content="ProBalance: restrain background CPU hogs while playing"/>
+                            <TextBlock Style="{StaticResource MutedText}" FontSize="12" Margin="50,2,0,8"
+                                       Text="Situational: lowers (never suspends) the priority of background programs that spike CPU, then restores them. Threshold and exclusions are in CPU &amp; Power."/>
+                            <CheckBox Style="{StaticResource SwitchStyle}" IsChecked="{Binding DisablePriorityBoost}" Content="Disable dynamic priority boost for the game"/>
+                            <TextBlock Style="{StaticResource MutedText}" FontSize="12" Margin="50,2,0,8"
+                                       Text="Placebo / Marginal: off by default. Windows briefly boosts threads that wake up; turning it off rarely changes anything measurable."/>
+                            <Grid Margin="0,4,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="170"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="CPU core preset" VerticalAlignment="Center"/>
+                                <ComboBox Grid.Column="1" ItemsSource="{x:Static vm:ProfileEditorVm.AffinityOptions}"
+                                          DisplayMemberPath="Label" SelectedValuePath="Value" SelectedValue="{Binding Affinity}"/>
+                            </Grid>
+                            <TextBlock Style="{StaticResource MutedText}" FontSize="12" Margin="170,4,0,0"
+                                       Text="{Binding DataContext.CpuSummary, RelativeSource={RelativeSource AncestorType=UserControl}, StringFormat='Your CPU: {0}. Usually leave this alone; measure before keeping any preset.'}"/>
+
+                            <!-- Power / memory / input -->
+                            <TextBlock Text="Power, memory and input" Style="{StaticResource H2}" Margin="0,18,0,8" Foreground="{StaticResource MutedBrush}"/>
+                            <CheckBox Style="{StaticResource SwitchStyle}" IsChecked="{Binding UsePerformancePlan}" Content="Switch to the Vanta Performance power plan (no core parking)"/>
+                            <TextBlock Style="{StaticResource MutedText}" FontSize="12" Margin="50,2,0,8"
+                                       Text="Proven on laptops and Balanced-plan PCs; small on desktops already on High Performance. Your normal plan returns when the game closes."/>
+                            <CheckBox Style="{StaticResource SwitchStyle}" IsChecked="{Binding TrimStandbyIfLow}" Content="Trim the standby list, only if free RAM is under 15%"/>
+                            <TextBlock Style="{StaticResource MutedText}" FontSize="12" Margin="50,2,0,8"
+                                       Text="Situational: 'clean RAM' does not give you more memory. It only helps in the rare case where cached memory is not released fast enough."/>
+                            <CheckBox Style="{StaticResource SwitchStyle}" IsChecked="{Binding ClearClipboard}" Content="Clear the clipboard"/>
+                            <TextBlock Style="{StaticResource MutedText}" FontSize="12" Margin="50,2,0,8" Text="Placebo / Marginal for FPS. Useful for privacy if you stream."/>
+                            <CheckBox Style="{StaticResource SwitchStyle}" IsChecked="{Binding BlockWindowsKey}" Content="Block the Windows key while the game is in front" Margin="0,0,0,8"/>
+                            <CheckBox Style="{StaticResource SwitchStyle}" IsChecked="{Binding BlockAccessibilityShortcuts}" Content="Stop Sticky/Filter Keys pop-ups (Shift x5, holding Shift)" Margin="0,0,0,8"/>
+                            <CheckBox Style="{StaticResource SwitchStyle}" IsChecked="{Binding ShowOverlay}" Content="Show the stats overlay (borderless/windowed games only)"/>
+
+                            <!-- Background -->
+                            <TextBlock Text="Background work" Style="{StaticResource H2}" Margin="0,18,0,8" Foreground="{StaticResource MutedBrush}"/>
+                            <CheckBox Style="{StaticResource SwitchStyle}" IsChecked="{Binding MuteNotifications}" Content="Mute app notifications" Margin="0,0,0,8"/>
+                            <CheckBox Style="{StaticResource SwitchStyle}" IsChecked="{Binding PauseSearchIndexing}" Content="Pause Windows Search indexing" Margin="0,0,0,8"/>
+                            <CheckBox Style="{StaticResource SwitchStyle}" IsChecked="{Binding PauseWindowsUpdate}" Content="Pause Windows Update and Delivery Optimization downloads"/>
+                            <TextBlock Style="{StaticResource MutedText}" FontSize="12" Margin="50,2,0,8"
+                                       Text="Situational: Windows may restart these services by itself; Game Mode already blocks update installs while you play."/>
+
+                            <TextBlock Text="Suspend or close these apps while playing" Margin="0,8,0,6"/>
+                            <ItemsControl ItemsSource="{Binding BackgroundApps}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate DataType="{x:Type vm:BackgroundAppVm}">
+                                        <Grid Margin="0,0,0,6">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="250"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="{Binding ProcessName}" VerticalAlignment="Center"/>
+                                            <ComboBox Grid.Column="1" ItemsSource="{x:Static vm:ProfileEditorVm.ActionOptions}"
+                                                      DisplayMemberPath="Label" SelectedValuePath="Value" SelectedValue="{Binding Action}"/>
+                                            <Button Grid.Column="2" Content="Remove" Margin="8,0,0,0"
+                                                    Command="{Binding DataContext.RemoveBackgroundAppCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                    CommandParameter="{Binding}"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <Grid Margin="0,4,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="220"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox Text="{Binding NewBackgroundApp, UpdateSourceTrigger=PropertyChanged}" ToolTip="Process name, e.g. OneDrive"/>
+                                <ComboBox Grid.Column="1" Margin="8,0,0,0" ToolTip="Pick from running programs"
+                                          ItemsSource="{Binding DataContext.RunningProcessNames, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                          SelectedItem="{Binding NewBackgroundApp, Mode=OneWayToSource}"
+                                          DropDownOpened="OnProcessDropDownOpened"/>
+                                <Button Grid.Column="2" Content="Add" Margin="8,0,0,0" Command="{Binding AddBackgroundAppCommand}"/>
+                            </Grid>
+                            <TextBlock Style="{StaticResource MutedText}" FontSize="12" Margin="0,6,0,0"
+                                       Text="Suspend freezes an app and resumes it after the game (safe for OneDrive, Teams, browsers). Close asks it to exit like clicking X and reopens it afterwards. Windows and anti-cheat processes are never touched."/>
+
+                            <!-- Timer -->
+                            <TextBlock Text="Timer resolution" Style="{StaticResource H2}" Margin="0,18,0,8" Foreground="{StaticResource MutedBrush}"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="170"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="While this game runs" VerticalAlignment="Center"/>
+                                <ComboBox Grid.Column="1" ItemsSource="{x:Static vm:ProfileEditorVm.TimerOptions}"
+                                          DisplayMemberPath="Label" SelectedValuePath="Value" SelectedValue="{Binding TimerResolution100ns}"/>
+                            </Grid>
+                            <TextBlock Style="{StaticResource MutedText}" FontSize="12" Margin="170,4,0,0"
+                                       Text="Placebo / Marginal on most PCs, and on Windows 10 2004+ / 11 it only works system-wide with the Timer tab's setting. Run the Timer benchmark first. Always released when the game closes or Vanta exits."/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+    </Grid>
+</UserControl>

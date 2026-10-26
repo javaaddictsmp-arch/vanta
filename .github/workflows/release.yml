@@ -1,0 +1,74 @@
+# Builds Vanta on GitHub's Windows servers and publishes a release.
+# To release: push a tag like v0.3.0 (GitHub Desktop: Repository > Create tag, then Push),
+# or run it by hand from the Actions tab and type the version.
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (for example 0.3.0)'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Work out the version
+        id: ver
+        shell: pwsh
+        run: |
+          $v = if ('${{ github.event_name }}' -eq 'workflow_dispatch') { '${{ github.event.inputs.version }}' } else { '${{ github.ref_name }}' }
+          $v = $v.TrimStart('v')
+          if ($v -notmatch '^\d+\.\d+\.\d+$') { throw "Version '$v' must look like 1.2.3" }
+          "version=$v" >> $env:GITHUB_OUTPUT
+
+      - name: Build Vanta.exe
+        shell: pwsh
+        run: >
+          dotnet publish TuneUp.csproj -c Release -r win-x64 --self-contained
+          -p:PublishSingleFile=true
+          -p:Version=${{ steps.ver.outputs.version }}
+          -p:GitHubRepo=${{ github.repository }}
+          -o publish
+
+      - name: Build the installer
+        shell: pwsh
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { choco install innosetup -y --no-progress; }
+          & $iscc "/DMyAppVersion=${{ steps.ver.outputs.version }}" "/DMyAppUrl=https://github.com/${{ github.repository }}" installer\vanta.iss
+          if ($LASTEXITCODE -ne 0) { throw "Inno Setup failed" }
+
+      - name: Portable zip and checksums
+        shell: pwsh
+        run: |
+          Copy-Item LICENSE publish\LICENSE.txt
+          Copy-Item THIRD-PARTY-NOTICES.md publish\THIRD-PARTY-NOTICES.txt
+          Compress-Archive -Path publish\Vanta.exe, publish\LICENSE.txt, publish\THIRD-PARTY-NOTICES.txt -DestinationPath Vanta-Portable.zip
+          $lines = foreach ($f in 'installer\Output\Vanta-Setup.exe', 'Vanta-Portable.zip') { "$((Get-FileHash $f -Algorithm SHA256).Hash.ToLower())  $(Split-Path $f -Leaf)" }
+          $lines | Set-Content SHA256SUMS.txt
+
+      # Signing goes here once the SignPath (free for open source) application is approved.
+
+      - name: Publish the release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.ver.outputs.version }}
+          name: Vanta ${{ steps.ver.outputs.version }}
+          generate_release_notes: true
+          files: |
+            installer/Output/Vanta-Setup.exe
+            Vanta-Portable.zip
+            SHA256SUMS.txt

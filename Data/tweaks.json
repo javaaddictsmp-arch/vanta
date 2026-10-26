@@ -1,0 +1,458 @@
+{
+  "tweaks": [
+
+    {
+      "id": "mouse-accel-off",
+      "simple": "Makes your mouse move the same distance every time, so your aim becomes consistent.",
+      "name": "Turn off mouse acceleration (Enhance pointer precision)",
+      "category": "Input & Latency",
+      "description": "Makes cursor/aim movement 1:1 with your hand movement instead of depending on how fast you move the mouse. Same as unticking 'Enhance pointer precision' in Windows mouse settings.",
+      "risk": "Safe",
+      "evidence": "Proven",
+      "evidenceNote": "Not an FPS tweak. It is a consistency tweak: aim muscle memory is much more reliable without acceleration. Most competitive players turn it off.",
+      "signOutRequired": true,
+      "quickOptimize": true,
+      "operations": [
+        { "kind": "registry", "hive": "HKCU", "path": "Control Panel\\Mouse", "name": "MouseSpeed",      "valueType": "String", "applyValue": "0", "defaultValue": "1" },
+        { "kind": "registry", "hive": "HKCU", "path": "Control Panel\\Mouse", "name": "MouseThreshold1", "valueType": "String", "applyValue": "0", "defaultValue": "6" },
+        { "kind": "registry", "hive": "HKCU", "path": "Control Panel\\Mouse", "name": "MouseThreshold2", "valueType": "String", "applyValue": "0", "defaultValue": "10" }
+      ]
+    },
+
+    {
+      "id": "startup-delay-off",
+      "simple": "Lets your startup apps open right away instead of Windows waiting a few seconds first.",
+      "name": "Remove the startup-app launch delay",
+      "category": "Startup & Boot",
+      "description": "Windows deliberately waits several seconds after login before launching your startup apps. This removes that wait so they start immediately.",
+      "risk": "Safe",
+      "evidence": "Proven",
+      "evidenceNote": "Measurable: startup apps begin loading seconds earlier. It does not affect in-game FPS. Note that starting everything at once can make the first minute after login feel busier.",
+      "quickOptimize": true,
+      "operations": [
+        { "kind": "registry", "hive": "HKCU", "path": "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Serialize", "name": "StartupDelayInMSec", "valueType": "DWord", "applyValue": "0", "defaultValue": null }
+      ]
+    },
+
+    {
+      "id": "sticky-keys-prompt-off",
+      "simple": "Stops the Sticky Keys pop-up that can kick you out of a game when you tap Shift a lot.",
+      "name": "Disable Sticky/Filter/Toggle Keys popups",
+      "category": "Input & Latency",
+      "description": "Stops the 'Do you want to turn on Sticky Keys?' popup that appears when you tap Shift five times, which can minimize your game mid-fight.",
+      "risk": "Safe",
+      "evidence": "Proven",
+      "evidenceNote": "Does not add FPS. It prevents a popup from alt-tabbing you out of a game. Leave it alone if you rely on these accessibility shortcuts.",
+      "quickOptimize": false,
+      "operations": [
+        { "kind": "registry", "hive": "HKCU", "path": "Control Panel\\Accessibility\\StickyKeys",  "name": "Flags", "valueType": "String", "applyValue": "506", "defaultValue": "510" },
+        { "kind": "registry", "hive": "HKCU", "path": "Control Panel\\Accessibility\\Keyboard Response", "name": "Flags", "valueType": "String", "applyValue": "122", "defaultValue": "126" },
+        { "kind": "registry", "hive": "HKCU", "path": "Control Panel\\Accessibility\\ToggleKeys",  "name": "Flags", "valueType": "String", "applyValue": "58",  "defaultValue": "62" }
+      ]
+    },
+
+    {
+      "id": "game-dvr-off",
+      "simple": "Stops Xbox Game Bar from secretly recording your games in the background.",
+      "name": "Turn off Xbox Game Bar background capture (Game DVR)",
+      "category": "Gaming",
+      "description": "Disables Game Bar's background recording / capture hooks so nothing records or hooks into your games unless you ask it to.",
+      "risk": "Safe",
+      "evidence": "Situational",
+      "evidenceNote": "If you never used 'record last 30 seconds' there is usually nothing to gain. Where background capture was active, it can cost a few FPS and cause stutter. You lose Win+G clip capture.",
+      "operations": [
+        { "kind": "registry", "hive": "HKCU", "path": "System\\GameConfigStore", "name": "GameDVR_Enabled", "valueType": "DWord", "applyValue": "0", "defaultValue": "1" },
+        { "kind": "registry", "hive": "HKCU", "path": "Software\\Microsoft\\Windows\\CurrentVersion\\GameDVR", "name": "AppCaptureEnabled", "valueType": "DWord", "applyValue": "0", "defaultValue": "1" }
+      ]
+    },
+
+    {
+      "id": "fso-global-off",
+      "simple": "An old fix for input lag in some older games. Newer Windows usually handles this well already.",
+      "name": "Disable fullscreen optimizations globally",
+      "category": "Gaming",
+      "description": "Makes Windows treat exclusive-fullscreen games the old way instead of converting them to a borderless-style flip presentation.",
+      "risk": "Safe",
+      "evidence": "Situational",
+      "evidenceNote": "Results vary by game and GPU driver. Some titles get lower input latency, others stutter more or lose Auto HDR / flip-model benefits. Test per game with the A/B benchmark (coming in Phase 2) instead of assuming.",
+      "operations": [
+        { "kind": "registry", "hive": "HKCU", "path": "System\\GameConfigStore", "name": "GameDVR_FSEBehaviorMode",            "valueType": "DWord", "applyValue": "2", "defaultValue": "0" },
+        { "kind": "registry", "hive": "HKCU", "path": "System\\GameConfigStore", "name": "GameDVR_HonorUserFSEBehaviorMode",    "valueType": "DWord", "applyValue": "1", "defaultValue": "0" },
+        { "kind": "registry", "hive": "HKCU", "path": "System\\GameConfigStore", "name": "GameDVR_DXGIHonorFSEWindowsCompatible", "valueType": "DWord", "applyValue": "1", "defaultValue": "0" }
+      ]
+    },
+
+    {
+      "id": "background-apps-off",
+      "simple": "Stops Store apps from running in the background when you are not using them.",
+      "name": "Stop UWP apps running in the background",
+      "category": "Gaming",
+      "description": "Prevents Store apps (Weather, Mail, News, etc.) from waking up and using CPU/network while you play.",
+      "risk": "Safe",
+      "evidence": "Situational",
+      "evidenceNote": "Helps most on low-RAM or older PCs with many Store apps installed. On a clean system the saving is small. Some apps will not show notifications until opened.",
+      "operations": [
+        { "kind": "registry", "hive": "HKCU", "path": "Software\\Microsoft\\Windows\\CurrentVersion\\BackgroundAccessApplications", "name": "GlobalUserDisabled", "valueType": "DWord", "applyValue": "1", "defaultValue": "0" }
+      ]
+    },
+
+    {
+      "id": "transparency-off",
+      "simple": "Turns off the see-through glass look in Windows. Only noticeable on very weak PCs.",
+      "name": "Turn off window transparency effects",
+      "category": "Visuals",
+      "description": "Removes the acrylic/blur transparency from Start, taskbar and windows.",
+      "risk": "Safe",
+      "evidence": "Marginal",
+      "evidenceNote": "Saves a sliver of GPU time on the desktop. It does nothing for fullscreen game FPS on a dedicated GPU. Included for completeness; only worth it on weak integrated graphics.",
+      "operations": [
+        { "kind": "registry", "hive": "HKCU", "path": "Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize", "name": "EnableTransparency", "valueType": "DWord", "applyValue": "0", "defaultValue": "1" }
+      ]
+    },
+
+    {
+      "id": "hags-off",
+      "simple": "Changes who manages your graphics card work queue. Can go either way; only try it if you have problems.",
+      "name": "Force Hardware-accelerated GPU scheduling OFF",
+      "category": "GPU & Display",
+      "description": "Forces HAGS off so the CPU-side Windows GPU scheduler handles GPU work queues. HAGS is available on GTX 10-series and newer with recent drivers.",
+      "risk": "Moderate",
+      "evidence": "Situational",
+      "evidenceNote": "Effect varies by GPU and game; reports range from slightly better to slightly worse. It also affects Frame Generation availability on newer cards. If you already have HAGS off, you gain nothing. Needs a reboot.",
+      "rebootRequired": true,
+      "operations": [
+        { "kind": "registry", "hive": "HKLM", "path": "SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers", "name": "HwSchMode", "valueType": "DWord", "applyValue": "1", "defaultValue": null }
+      ]
+    },
+
+    {
+      "id": "mpo-disable",
+      "simple": "A known fix for screen flickering or black flashes. Only use it if you actually see those.",
+      "name": "Disable Multiplane Overlay (MPO)",
+      "category": "GPU & Display",
+      "description": "Turns off the MPO composition path in the Desktop Window Manager. Known fix for flickering, black-screen flashes and some stutter with certain NVIDIA/AMD driver versions or multi-monitor setups.",
+      "risk": "Moderate",
+      "evidence": "Situational",
+      "evidenceNote": "Only worth applying if you actually see flicker, black screens or odd stutter, especially with multiple monitors or high refresh rates. It may change frame pacing. Needs a reboot.",
+      "rebootRequired": true,
+      "operations": [
+        { "kind": "registry", "hive": "HKLM", "path": "SOFTWARE\\Microsoft\\Windows\\Dwm", "name": "OverlayTestMode", "valueType": "DWord", "applyValue": "5", "defaultValue": null }
+      ]
+    },
+
+    {
+      "id": "power-throttling-off",
+      "simple": "Stops Windows from slowing down programs it thinks are in the background. Mostly helps laptops.",
+      "name": "Disable Windows Power Throttling",
+      "category": "CPU & Scheduler",
+      "description": "Stops Windows from throttling background processes to save power on supported CPUs (mostly Intel 6th gen and newer).",
+      "risk": "Moderate",
+      "evidence": "Situational",
+      "evidenceNote": "Helps mainly on laptops and Intel hybrid CPUs where a game or capture tool is wrongly classified as background. On Ryzen desktops like the 3600X it is usually a no-op.",
+      "operations": [
+        { "kind": "registry", "hive": "HKLM", "path": "SYSTEM\\CurrentControlSet\\Control\\Power\\PowerThrottling", "name": "PowerThrottlingOff", "valueType": "DWord", "applyValue": "1", "defaultValue": null }
+      ]
+    },
+
+    {
+      "id": "win32-priority-separation",
+      "simple": "Changes how much extra attention the window you are using gets. Tests show almost no difference.",
+      "name": "Short, fixed foreground priority boost (Win32PrioritySeparation 0x26)",
+      "category": "CPU & Scheduler",
+      "description": "Changes how much extra CPU time the foreground window gets over background programs. 0x26 is the 'short, fixed, 3:1 foreground boost' preset many tweak guides recommend.",
+      "risk": "Moderate",
+      "evidence": "Marginal",
+      "evidenceNote": "Windows' own default is already tuned for foreground responsiveness. Independent testing shows little to no measurable FPS change. Kept off by default; revert is one click.",
+      "operations": [
+        { "kind": "registry", "hive": "HKLM", "path": "SYSTEM\\CurrentControlSet\\Control\\PriorityControl", "name": "Win32PrioritySeparation", "valueType": "DWord", "applyValue": "38", "defaultValue": "2" }
+      ]
+    },
+
+    {
+      "id": "mmcss-games",
+      "simple": "Gives a higher priority to games that ask Windows for it. Very few games do, so little changes.",
+      "name": "MMCSS 'Games' task: higher scheduling priority",
+      "category": "CPU & Scheduler",
+      "description": "Raises the scheduling class for threads that register with the Multimedia Class Scheduler as 'Games'.",
+      "risk": "Moderate",
+      "evidence": "Marginal",
+      "evidenceNote": "Only affects games/engines that explicitly register with MMCSS, which most do not. Little to no measurable change in typical games.",
+      "operations": [
+        { "kind": "registry", "hive": "HKLM", "path": "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\Tasks\\Games", "name": "Priority",            "valueType": "DWord",  "applyValue": "6",    "defaultValue": "2" },
+        { "kind": "registry", "hive": "HKLM", "path": "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\Tasks\\Games", "name": "Scheduling Category", "valueType": "String", "applyValue": "High", "defaultValue": "Medium" },
+        { "kind": "registry", "hive": "HKLM", "path": "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\Tasks\\Games", "name": "SFIO Priority",       "valueType": "String", "applyValue": "High", "defaultValue": "Normal" }
+      ]
+    },
+
+    {
+      "id": "system-responsiveness-0",
+      "simple": "Removes a small CPU reservation for background media. Rarely makes a measurable difference.",
+      "name": "MMCSS SystemResponsiveness = 0",
+      "category": "CPU & Scheduler",
+      "description": "Lowers the share of CPU that Windows reserves for low-priority multimedia/background tasks from the default 20% to 0%.",
+      "risk": "Moderate",
+      "evidence": "Marginal",
+      "evidenceNote": "The reservation only matters when multimedia tasks are competing for CPU, which is rare while gaming. Gains are not demonstrable in typical benchmarks.",
+      "operations": [
+        { "kind": "registry", "hive": "HKLM", "path": "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile", "name": "SystemResponsiveness", "valueType": "DWord", "applyValue": "0", "defaultValue": "20" }
+      ]
+    },
+
+    {
+      "id": "network-throttling-off",
+      "simple": "A popular online tweak for ping. There is no real proof it helps; included so you can undo it.",
+      "name": "Disable network throttling index",
+      "category": "Network",
+      "description": "Removes the packet-processing throttle Windows applies while multimedia (audio/video) is playing.",
+      "risk": "Moderate",
+      "evidence": "Marginal",
+      "evidenceNote": "Popular in tweak guides but no solid evidence of lower ping in games. It can slightly increase CPU interrupt load during media playback. Included only so you can undo it if you already applied it elsewhere.",
+      "operations": [
+        { "kind": "registry", "hive": "HKLM", "path": "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile", "name": "NetworkThrottlingIndex", "valueType": "DWord", "applyValue": "4294967295", "defaultValue": "10" }
+      ]
+    },
+
+    {
+      "id": "sysmain-disable",
+      "simple": "Turns off a service that preloads apps into memory. Can help or hurt depending on your drive.",
+      "name": "Disable SysMain (Superfetch)",
+      "category": "Memory & Services",
+      "description": "Stops the SysMain service that pre-loads frequently used apps into RAM and rewrites data to disk in the background.",
+      "risk": "Moderate",
+      "evidence": "Situational",
+      "evidenceNote": "On an SSD with 16 GB+ RAM the effect is small either way. On a hard drive, disabling it can make game and app loading slower, so leave it on if your games live on an HDD.",
+      "operations": [
+        { "kind": "service", "name": "SysMain", "applyValue": "Disabled", "defaultValue": "Automatic" }
+      ]
+    },
+
+    {
+      "id": "hvci-off",
+      "simple": "Turns off a Windows security feature for a small speed gain in some games. Lowers your protection.",
+      "name": "Turn off Memory Integrity (HVCI / VBS)",
+      "category": "Security vs Performance",
+      "description": "Disables hypervisor-enforced code integrity (Memory Integrity). With VBS active, some CPU-bound games run a few percent slower.",
+      "risk": "Advanced",
+      "evidence": "Situational",
+      "evidenceNote": "Gains depend on CPU and whether VBS is actually on (Windows 11 clean installs often enable it). Expect low single-digit percent in CPU-bound titles, if anything. Needs a reboot.",
+      "warning": "Reduces your security: Memory Integrity blocks vulnerable or malicious drivers from running in kernel mode. Some anti-cheat systems (for example Vanguard and FACEIT) have security requirements that change over time, so check the game's current requirements before turning this off. Windows may also re-enable it after updates.",
+      "rebootRequired": true,
+      "appliesTo": "Both",
+      "operations": [
+        { "kind": "registry", "hive": "HKLM", "path": "SYSTEM\\CurrentControlSet\\Control\\DeviceGuard\\Scenarios\\HypervisorEnforcedCodeIntegrity", "name": "Enabled", "valueType": "DWord", "applyValue": "0", "defaultValue": null }
+      ]
+    },
+
+    {
+      "id": "game-mode-on",
+      "simple": "Makes sure Windows Game Mode is on, so updates do not interrupt you while you play.",
+      "name": "Make sure Windows Game Mode is on",
+      "category": "Gaming",
+      "description": "Game Mode stops Windows Update from installing drivers or showing restart prompts during play and gives the game scheduling preference.",
+      "risk": "Safe",
+      "evidence": "Situational",
+      "evidenceNote": "On by default in Windows 10/11. Its main benefit is preventing background update work mid-game; FPS gains are small and mostly on lower-end CPUs. This just puts it back on if something turned it off.",
+      "operations": [
+        { "kind": "registry", "hive": "HKCU", "path": "Software\\Microsoft\\GameBar", "name": "AutoGameModeEnabled", "valueType": "DWord", "applyValue": "1", "defaultValue": null }
+      ]
+    },
+
+    {
+      "id": "windowed-game-optimizations",
+      "simple": "Makes older games in borderless window mode feel smoother and react faster.",
+      "name": "Optimizations for windowed games",
+      "category": "GPU & Display",
+      "description": "Windows 11 setting (Settings > Display > Graphics) that upgrades older DX10/DX11 games running windowed/borderless to the flip presentation model.",
+      "risk": "Safe",
+      "evidence": "Situational",
+      "evidenceNote": "Can lower latency and enable VRR and Auto HDR in borderless windowed games that use the old blt model. No effect on games that already use flip model (most DX12 and modern DX11 titles).",
+      "appliesTo": "Win11",
+      "operations": [
+        { "kind": "registry", "hive": "HKCU", "path": "Software\\Microsoft\\DirectX\\UserGpuPreferences", "name": "DirectXUserGlobalSettings", "valueType": "String", "applyValue": "SwapEffectUpgradeEnable=1;", "defaultValue": null }
+      ]
+    },
+
+    {
+      "id": "global-timer-resolution",
+      "simple": "A deep Windows timing setting. Most games already handle this themselves, so it rarely matters.",
+      "name": "Allow global timer resolution requests (Windows 11)",
+      "category": "CPU & Scheduler",
+      "description": "Since Windows 10 2004, a program's timer resolution request only affects that program. On Windows 11 this documented kernel setting restores the old system-wide behaviour, which timer tools (including Vanta's per-game timer) rely on.",
+      "risk": "Moderate",
+      "evidence": "Marginal",
+      "evidenceNote": "Most games already request 1 ms for themselves. Measurable gains are rare; it slightly raises idle power use. Use the Timer tab's benchmark to see whether it changes anything on your PC. Needs a reboot.",
+      "rebootRequired": true,
+      "appliesTo": "Win11",
+      "operations": [
+        { "kind": "registry", "hive": "HKLM", "path": "SYSTEM\\CurrentControlSet\\Control\\Session Manager\\kernel", "name": "GlobalTimerResolutionRequests", "valueType": "DWord", "applyValue": "1", "defaultValue": null }
+      ]
+    },
+
+    {
+      "id": "privacy-advertising-id",
+      "name": "Turn off the advertising ID",
+      "simple": "Stops apps from using a personal ID to show you targeted ads.",
+      "category": "Privacy",
+      "description": "Disables the per-user advertising identifier apps can read (Settings > Privacy > General).",
+      "risk": "Safe", "evidence": "Situational",
+      "evidenceNote": "This is about privacy, not speed. Ads still appear, just less personalised.",
+      "operations": [
+        { "kind": "registry", "hive": "HKCU", "path": "Software\\Microsoft\\Windows\\CurrentVersion\\AdvertisingInfo", "name": "Enabled", "valueType": "DWord", "applyValue": "0", "defaultValue": "1" }
+      ]
+    },
+
+    {
+      "id": "privacy-tailored-experiences",
+      "name": "Turn off tailored experiences",
+      "simple": "Stops Microsoft using your diagnostic data to show personalised tips and ads.",
+      "category": "Privacy",
+      "description": "Disables 'Tailored experiences' (Settings > Privacy > Diagnostics & feedback).",
+      "risk": "Safe", "evidence": "Situational",
+      "evidenceNote": "This is about privacy, not speed.",
+      "operations": [
+        { "kind": "registry", "hive": "HKCU", "path": "Software\\Microsoft\\Windows\\CurrentVersion\\Privacy", "name": "TailoredExperiencesWithDiagnosticDataEnabled", "valueType": "DWord", "applyValue": "0", "defaultValue": null }
+      ]
+    },
+
+    {
+      "id": "privacy-start-suggestions",
+      "name": "Stop Start-menu suggestions and auto-installed apps",
+      "simple": "Stops Windows advertising apps in Start and quietly installing 'suggested' apps.",
+      "category": "Privacy",
+      "description": "Turns off suggested apps in Start, 'tips and tricks' notifications, and the silent installation of promoted apps (Candy Crush style).",
+      "risk": "Safe", "evidence": "Situational",
+      "evidenceNote": "Mainly removes clutter and background app installs. Already-installed apps are not removed (see Apps tab).",
+      "operations": [
+        { "kind": "registry", "hive": "HKCU", "path": "Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager", "name": "SystemPaneSuggestionsEnabled", "valueType": "DWord", "applyValue": "0", "defaultValue": null },
+        { "kind": "registry", "hive": "HKCU", "path": "Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager", "name": "SubscribedContent-338388Enabled", "valueType": "DWord", "applyValue": "0", "defaultValue": null },
+        { "kind": "registry", "hive": "HKCU", "path": "Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager", "name": "SubscribedContent-338389Enabled", "valueType": "DWord", "applyValue": "0", "defaultValue": null },
+        { "kind": "registry", "hive": "HKCU", "path": "Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager", "name": "SilentInstalledAppsEnabled", "valueType": "DWord", "applyValue": "0", "defaultValue": null },
+        { "kind": "registry", "hive": "HKCU", "path": "Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager", "name": "SoftLandingEnabled", "valueType": "DWord", "applyValue": "0", "defaultValue": null }
+      ]
+    },
+
+    {
+      "id": "privacy-lockscreen-tips",
+      "name": "Turn off lock screen tips and ads",
+      "simple": "Removes the 'fun facts and tips' text and promotions from the lock screen.",
+      "category": "Privacy",
+      "description": "Disables the rotating tips/ads overlay on the Windows Spotlight lock screen.",
+      "risk": "Safe", "evidence": "Situational",
+      "evidenceNote": "Cosmetic and privacy only.",
+      "operations": [
+        { "kind": "registry", "hive": "HKCU", "path": "Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager", "name": "RotatingLockScreenOverlayEnabled", "valueType": "DWord", "applyValue": "0", "defaultValue": null },
+        { "kind": "registry", "hive": "HKCU", "path": "Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager", "name": "SubscribedContent-338387Enabled", "valueType": "DWord", "applyValue": "0", "defaultValue": null }
+      ]
+    },
+
+    {
+      "id": "privacy-telemetry-minimum",
+      "name": "Send only required diagnostic data",
+      "simple": "Tells Windows to send Microsoft only the minimum diagnostic data it needs.",
+      "category": "Privacy",
+      "description": "Sets the diagnostic data policy to 'Required' (level 1). Home and Pro can't go lower than this through supported settings. Pair it with the Telemetry service in Startup & Services for the full effect.",
+      "risk": "Safe", "evidence": "Situational",
+      "evidenceNote": "Privacy, not speed. Windows Update keeps working normally. Some Settings pages will say 'Some settings are managed by your organization'; that's expected for policy settings.",
+      "operations": [
+        { "kind": "registry", "hive": "HKLM", "path": "SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection", "name": "AllowTelemetry", "valueType": "DWord", "applyValue": "1", "defaultValue": null }
+      ]
+    },
+
+    {
+      "id": "privacy-bing-search",
+      "name": "Remove web (Bing) results from Start search",
+      "simple": "Makes Start search only look on your PC, which is also faster.",
+      "category": "Privacy",
+      "description": "Stops the Start menu search box from sending what you type to Bing and showing web results.",
+      "risk": "Safe", "evidence": "Situational",
+      "evidenceNote": "Start searches feel snappier because they no longer wait for web results. Needs a sign-out.",
+      "signOutRequired": true,
+      "operations": [
+        { "kind": "registry", "hive": "HKCU", "path": "Software\\Policies\\Microsoft\\Windows\\Explorer", "name": "DisableSearchBoxSuggestions", "valueType": "DWord", "applyValue": "1", "defaultValue": null }
+      ]
+    },
+
+    {
+      "id": "privacy-activity-history",
+      "name": "Turn off activity history",
+      "simple": "Stops Windows keeping (and uploading) a timeline of the apps and files you used.",
+      "category": "Privacy",
+      "description": "Disables collecting and uploading activity history.",
+      "risk": "Safe", "evidence": "Situational",
+      "evidenceNote": "Privacy only.",
+      "operations": [
+        { "kind": "registry", "hive": "HKLM", "path": "SOFTWARE\\Policies\\Microsoft\\Windows\\System", "name": "PublishUserActivities", "valueType": "DWord", "applyValue": "0", "defaultValue": null },
+        { "kind": "registry", "hive": "HKLM", "path": "SOFTWARE\\Policies\\Microsoft\\Windows\\System", "name": "UploadUserActivities", "valueType": "DWord", "applyValue": "0", "defaultValue": null }
+      ]
+    },
+
+    {
+      "id": "privacy-feedback-prompts",
+      "name": "Stop Windows feedback pop-ups",
+      "simple": "Stops Windows asking 'How likely are you to recommend Windows?'.",
+      "category": "Privacy",
+      "description": "Sets feedback frequency to Never.",
+      "risk": "Safe", "evidence": "Situational",
+      "evidenceNote": "Fewer interruptions; no speed effect.",
+      "operations": [
+        { "kind": "registry", "hive": "HKCU", "path": "Software\\Microsoft\\Siuf\\Rules", "name": "NumberOfSIUFInPeriod", "valueType": "DWord", "applyValue": "0", "defaultValue": null }
+      ]
+    },
+
+    {
+      "id": "privacy-copilot-off",
+      "name": "Turn off Windows Copilot",
+      "simple": "Hides and disables the built-in Copilot assistant.",
+      "category": "Privacy",
+      "description": "Applies the 'Turn off Windows Copilot' user policy. Newer Windows 11 versions ship Copilot as a normal app; remove it from the Apps tab if it still appears.",
+      "risk": "Safe", "evidence": "Situational",
+      "evidenceNote": "Frees a little memory if Copilot was running in the background; mainly a preference.",
+      "appliesTo": "Win11",
+      "operations": [
+        { "kind": "registry", "hive": "HKCU", "path": "Software\\Policies\\Microsoft\\Windows\\WindowsCopilot", "name": "TurnOffWindowsCopilot", "valueType": "DWord", "applyValue": "1", "defaultValue": null }
+      ]
+    },
+
+    {
+      "id": "privacy-recall-off",
+      "name": "Turn off Recall snapshots",
+      "simple": "Stops Windows taking regular screenshots of your screen for the Recall feature.",
+      "category": "Privacy",
+      "description": "Applies the policy that disables saving Recall snapshots (only on Copilot+ PCs that have Recall).",
+      "risk": "Safe", "evidence": "Situational",
+      "evidenceNote": "On PCs without Recall this does nothing. Where Recall exists it also saves disk space and background work.",
+      "appliesTo": "Win11",
+      "operations": [
+        { "kind": "registry", "hive": "HKCU", "path": "Software\\Policies\\Microsoft\\Windows\\WindowsAI", "name": "DisableAIDataAnalysis", "valueType": "DWord", "applyValue": "1", "defaultValue": null }
+      ]
+    },
+
+    {
+      "id": "qol-show-file-extensions",
+      "name": "Show file extensions",
+      "simple": "Shows the end of file names (.exe, .jpg), which also makes fake 'photo.jpg.exe' files easy to spot.",
+      "category": "Privacy",
+      "description": "Turns off 'Hide extensions for known file types' in File Explorer.",
+      "risk": "Safe", "evidence": "Proven",
+      "evidenceNote": "A security and convenience setting, not a speed one.",
+      "operations": [
+        { "kind": "registry", "hive": "HKCU", "path": "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced", "name": "HideFileExt", "valueType": "DWord", "applyValue": "0", "defaultValue": "1" }
+      ]
+    },
+
+    {
+      "id": "edge-startup-boost-off",
+      "name": "Stop Microsoft Edge preloading at startup",
+      "simple": "Stops Edge running quietly in the background from the moment you log in.",
+      "category": "Privacy",
+      "description": "Applies the Edge 'Startup boost' and 'Continue running background apps' policies so Edge only runs when you open it.",
+      "risk": "Safe", "evidence": "Situational",
+      "evidenceNote": "Saves some memory and startup work if you don't use Edge. Edge opens a little slower the first time.",
+      "operations": [
+        { "kind": "registry", "hive": "HKLM", "path": "SOFTWARE\\Policies\\Microsoft\\Edge", "name": "StartupBoostEnabled", "valueType": "DWord", "applyValue": "0", "defaultValue": null },
+        { "kind": "registry", "hive": "HKLM", "path": "SOFTWARE\\Policies\\Microsoft\\Edge", "name": "BackgroundModeEnabled", "valueType": "DWord", "applyValue": "0", "defaultValue": null }
+      ]
+    }
+
+  ]
+}

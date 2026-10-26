@@ -1,0 +1,503 @@
+<UserControl x:Class="TuneUp.Views.CleaningView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:TuneUp.Controls"
+             xmlns:vm="clr-namespace:TuneUp.ViewModels"
+             xmlns:s="clr-namespace:TuneUp.Services"
+             Style="{StaticResource ViewFade}">
+    <Grid Margin="32,26,32,0">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Margin="0,0,0,16">
+            <TextBlock Text="Cleaning &amp; RAM" Style="{StaticResource H1}"/>
+            <TextBlock Style="{StaticResource MutedText}" Margin="0,4,0,0"
+                       Text="Free up disk space, find what's eating your drive, and keep an eye on memory. Sizes are always shown before anything is deleted."/>
+        </StackPanel>
+
+        <TabControl Grid.Row="1" SelectedIndex="{Binding SelectedTab}">
+
+            <!-- ============================== Clean up ============================== -->
+            <TabItem Header="Clean up">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="0,0,6,24">
+                        <c:Explainer Text="Windows and your apps leave temporary files behind. Pick what to remove and Vanta shows exactly how much space you get back. Honest note: this frees space; it does not make games faster unless your drive was almost full."/>
+
+                        <Border Style="{StaticResource Card}" Margin="0,0,0,12" Padding="16,12">
+                            <DockPanel>
+                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                    <Button Content="Measure again" Command="{Binding MeasureCommand}" Margin="0,0,8,0" IsEnabled="{Binding IsBusy, Converter={StaticResource InvBool}}"/>
+                                    <Button Style="{StaticResource AccentButton}" Command="{Binding CleanCommand}" IsEnabled="{Binding IsBusy, Converter={StaticResource InvBool}}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="&#xE74D;" FontFamily="Segoe MDL2 Assets" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                            <TextBlock Text="Clean selected"/>
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding SelectedTotal}" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}"/>
+                                    <TextBlock Text="{Binding Status}" Style="{StaticResource MutedText}" FontSize="12"/>
+                                </StackPanel>
+                            </DockPanel>
+                        </Border>
+
+                        <ItemsControl ItemsSource="{Binding Items}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="{x:Type vm:CleanItemVm}">
+                                    <Border Style="{StaticResource HoverCard}" Padding="16,12" Margin="0,0,0,8">
+                                        <DockPanel>
+                                            <StackPanel DockPanel.Dock="Right" HorizontalAlignment="Right" MinWidth="110">
+                                                <TextBlock Text="{Binding SizeText}" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Right"/>
+                                                <TextBlock Text="{Binding CountText}" Style="{StaticResource MutedText}" FontSize="11.5" HorizontalAlignment="Right"/>
+                                            </StackPanel>
+                                            <CheckBox DockPanel.Dock="Left" Style="{StaticResource SwitchStyle}" IsChecked="{Binding IsSelected}" VerticalAlignment="Top" Margin="0,2,12,0"
+                                                      Command="{Binding DataContext.UpdateTotalCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="14"/>
+                                                <TextBlock Text="{Binding Description}" Style="{StaticResource MutedText}" Margin="0,3,0,0"/>
+                                                <TextBlock Text="{Binding Warning}" TextWrapping="Wrap" FontSize="12" Margin="0,5,0,0" Foreground="{StaticResource WarnBrush}"
+                                                           Visibility="{Binding Warning, Converter={StaticResource StringToVis}}"/>
+                                            </StackPanel>
+                                        </DockPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- ============================== Find space ============================== -->
+            <TabItem Header="Find space">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <c:Explainer Text="Find out what is actually using your space: the biggest files, which folders are huge, and identical copies of the same file. Nothing is deleted automatically; you can open the location or move a file to the Recycle Bin."/>
+
+                    <Border Grid.Row="1" Style="{StaticResource Card}" Margin="0,0,0,12" Padding="14,12">
+                        <StackPanel>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="70"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox Text="{Binding RootPath, UpdateSourceTrigger=PropertyChanged}"/>
+                                <Button Grid.Column="1" Content="Browse" Command="{Binding BrowseCommand}" Margin="8,0,0,0"/>
+                                <TextBlock Grid.Column="2" Text="Big files over (MB)" VerticalAlignment="Center" Margin="16,0,8,0" Style="{StaticResource MutedText}"/>
+                                <TextBox Grid.Column="3" Text="{Binding MinSizeMb}"/>
+                            </Grid>
+                            <WrapPanel Margin="0,10,0,0">
+                                <Button Content="Biggest files" Style="{StaticResource AccentButton}" Command="{Binding FindBigCommand}" Margin="0,0,8,0" IsEnabled="{Binding IsBusy, Converter={StaticResource InvBool}}"/>
+                                <Button Content="Folder sizes" Command="{Binding BreakdownCommand}" Margin="0,0,8,0" IsEnabled="{Binding IsBusy, Converter={StaticResource InvBool}}"/>
+                                <Button Content="Duplicate files" Command="{Binding FindDuplicatesCommand}" Margin="0,0,8,0" IsEnabled="{Binding IsBusy, Converter={StaticResource InvBool}}"/>
+                                <Button Content="Stop" Style="{StaticResource DangerButton}" Command="{Binding StopCommand}" Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}"/>
+                            </WrapPanel>
+                            <TextBlock Text="{Binding FindStatus}" Margin="0,10,0,0" TextWrapping="Wrap" Visibility="{Binding FindStatus, Converter={StaticResource StringToVis}}"/>
+                        </StackPanel>
+                    </Border>
+
+                    <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="0,0,6,24">
+                            <ItemsControl ItemsSource="{Binding SizeRows}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate DataType="{x:Type vm:SizeRow}">
+                                        <Border Background="{StaticResource Surface2Brush}" CornerRadius="10" Padding="12,9" Margin="0,0,0,6">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="90"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel>
+                                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                                    <TextBlock Text="{Binding Path}" Style="{StaticResource MutedText}" FontSize="11.5" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap"/>
+                                                    <ProgressBar Style="{StaticResource Bar}" Value="{Binding Percent, Mode=OneWay}" Height="4" Margin="0,6,0,0"/>
+                                                </StackPanel>
+                                                <TextBlock Grid.Column="1" Text="{Binding SizeText}" FontWeight="SemiBold" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                                <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="12,0,0,0" VerticalAlignment="Center">
+                                                    <Button Content="Open" Padding="10,4" Margin="0,0,6,0"
+                                                            Command="{Binding DataContext.OpenLocationCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding Path}"/>
+                                                    <Button Content="&#xE74D;" FontFamily="Segoe MDL2 Assets" Padding="9,4" ToolTip="Move to Recycle Bin (files only)"
+                                                            Command="{Binding DataContext.RecycleCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding Path}"/>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <ItemsControl ItemsSource="{Binding Duplicates}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate DataType="{x:Type vm:DuplicateRow}">
+                                        <Border Background="{StaticResource Surface2Brush}" CornerRadius="10" Padding="12,10" Margin="0,0,0,8">
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding Header}" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                                                <ItemsControl ItemsSource="{Binding Files}">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <DockPanel Margin="0,2">
+                                                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                                                    <Button Content="Open" Padding="10,3" Margin="0,0,6,0"
+                                                                            Command="{Binding DataContext.OpenLocationCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"/>
+                                                                    <Button Content="&#xE74D;" FontFamily="Segoe MDL2 Assets" Padding="9,3" ToolTip="Move this copy to the Recycle Bin"
+                                                                            Command="{Binding DataContext.RecycleCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"/>
+                                                                </StackPanel>
+                                                                <TextBlock Text="{Binding}" Style="{StaticResource MutedText}" FontSize="12" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap"/>
+                                                            </DockPanel>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </TabItem>
+
+            <!-- ============================== Games & drives ============================== -->
+            <TabItem Header="Games &amp; drives">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="0,0,6,24">
+                        <c:Explainer Text="See how much space each game takes and which drive it lives on. Games on an old hard drive (HDD) load slower and can stutter; the ones you play most belong on an SSD. Steam can move a game without downloading it again."/>
+
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <DockPanel>
+                                    <Button DockPanel.Dock="Right" Content="Measure games" Style="{StaticResource AccentButton}" Command="{Binding ScanGamesCommand}" VerticalAlignment="Top"
+                                            IsEnabled="{Binding IsBusy, Converter={StaticResource InvBool}}"/>
+                                    <StackPanel>
+                                        <TextBlock Text="Game library" Style="{StaticResource H2}"/>
+                                        <TextBlock Text="{Binding GamesStatus}" Style="{StaticResource MutedText}" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </DockPanel>
+                                <ItemsControl ItemsSource="{Binding Games}" Margin="0,10,0,0">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate DataType="{x:Type s:GameInstall}">
+                                            <Grid Margin="0,0,0,6">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="90"/>
+                                                    <ColumnDefinition Width="120"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock VerticalAlignment="Center" TextTrimming="CharacterEllipsis">
+                                                    <Run Text="{Binding Name, Mode=OneWay}" FontWeight="SemiBold"/>
+                                                    <Run Text="{Binding Launcher, Mode=OneWay, StringFormat='  {0}'}" Foreground="{StaticResource MutedBrush}" FontSize="12"/>
+                                                </TextBlock>
+                                                <TextBlock Grid.Column="1" Text="{Binding Size, Converter={StaticResource SizeText}}" VerticalAlignment="Center" HorizontalAlignment="Right"/>
+                                                <TextBlock Grid.Column="2" VerticalAlignment="Center" Margin="16,0,0,0">
+                                                    <Run Text="{Binding Drive, Mode=OneWay}"/>
+                                                    <Run Text="{Binding DriveKind, Mode=OneWay}" Foreground="{StaticResource MutedBrush}"/>
+                                                </TextBlock>
+                                                <Button Grid.Column="3" Content="Open" Padding="10,3"
+                                                        Command="{Binding DataContext.OpenLocationCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding Folder}"/>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource Card}" Margin="0,12,0,0">
+                            <StackPanel>
+                                <DockPanel>
+                                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Top">
+                                        <Button Content="Storage Sense" Command="{Binding OpenStorageSenseCommand}" Margin="0,0,8,0"/>
+                                        <Button Content="Optimize system drive" Command="{Binding OptimizeDrivesCommand}" IsEnabled="{Binding IsBusy, Converter={StaticResource InvBool}}"/>
+                                    </StackPanel>
+                                    <StackPanel>
+                                        <TextBlock Text="Drive maintenance" Style="{StaticResource H2}"/>
+                                        <TextBlock Style="{StaticResource MutedText}" Margin="0,2,0,0"
+                                                   Text="Windows already does this weekly. 'Optimize' runs it now: TRIM for SSDs (keeps them fast) or defragmenting for hard drives. Never defragment an SSD by hand."/>
+                                    </StackPanel>
+                                </DockPanel>
+                                <TextBlock Text="{Binding TrimStatus}" Margin="0,8,0,0" Visibility="{Binding TrimStatus, Converter={StaticResource StringToVis}}"/>
+                                <TextBox Text="{Binding OptimizeLog, Mode=OneWay}" IsReadOnly="True" FontFamily="Consolas" FontSize="12" Margin="0,10,0,0"
+                                         MaxHeight="200" VerticalScrollBarVisibility="Auto" TextWrapping="Wrap"
+                                         Visibility="{Binding OptimizeLog, Converter={StaticResource StringToVis}}"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- ============================== Memory ============================== -->
+            <TabItem Header="Memory (RAM)">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="0,0,6,24">
+                        <!-- ===== RAM cleaner (status + clean) ===== -->
+                        <Border Style="{StaticResource Card}" Padding="20,18">
+                            <StackPanel>
+                                <DockPanel>
+                                    <Button DockPanel.Dock="Right" Style="{StaticResource HeroButton}" Padding="26,11" VerticalAlignment="Center"
+                                            Command="{Binding CleanRamCommand}" IsEnabled="{Binding IsCleaning, Converter={StaticResource InvBool}}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="&#xE945;" FontFamily="Segoe MDL2 Assets" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                            <TextBlock Text="Clean"/>
+                                        </StackPanel>
+                                    </Button>
+                                    <CheckBox DockPanel.Dock="Right" Style="{StaticResource SwitchStyle}" IsChecked="{Binding IncludeOpenApps}" Content="Deep clean"
+                                              VerticalAlignment="Center" Margin="0,0,18,0" FontWeight="SemiBold"
+                                              ToolTip="Deep clean works like ExitLag: it squeezes every app (including open ones and the allow list) plus Windows' compressed memory, and clears all cache. Frees the most. Nothing closes; apps pull back what they use, so they may feel slow for a moment and the number creeps back up. While a game is running it skips the 'squeeze everything' step so the game doesn't stutter."/>
+                                    <WrapPanel VerticalAlignment="Center">
+                                        <TextBlock Text="RAM cleaner" FontSize="20" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                        <Border Style="{StaticResource HelpBadge}" Margin="0,0,14,0"
+                                                ToolTip="Normal clean frees memory held by background programs you aren't using (tray apps, updaters, idle Windows services) and clears cache Windows isn't releasing fast enough. Apps with an open window, your game and your allow list are left alone. Deep clean goes much further (see its switch). Nothing is ever closed: trimmed apps take back what they need when they next run.">
+                                            <TextBlock Text="?" FontSize="11" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{StaticResource MutedBrush}"/>
+                                        </Border>
+                                        <Border CornerRadius="8" Padding="10,4" Margin="0,0,14,0" VerticalAlignment="Center">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="#1F34E3A0"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding NeedsCleaning}" Value="True"><Setter Property="Background" Value="#26FFBE5C"/></DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Ellipse Width="8" Height="8" Margin="0,0,7,0" VerticalAlignment="Center">
+                                                    <Ellipse.Style>
+                                                        <Style TargetType="Ellipse" BasedOn="{StaticResource PulseDot}">
+                                                            <Setter Property="Fill" Value="{StaticResource GoodBrush}"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding NeedsCleaning}" Value="True"><Setter Property="Fill" Value="{StaticResource WarnBrush}"/></DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Ellipse.Style>
+                                                </Ellipse>
+                                                <TextBlock Text="{Binding StatusText}" FontWeight="SemiBold" FontSize="12.5">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Foreground" Value="{StaticResource GoodBrush}"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding NeedsCleaning}" Value="True"><Setter Property="Foreground" Value="{StaticResource WarnBrush}"/></DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                            </StackPanel>
+                                        </Border>
+                                        <Border Width="1" Height="18" Background="{StaticResource LineBrush}" Margin="0,0,14,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding LastCleanupText}" Style="{StaticResource MutedText}" VerticalAlignment="Center"/>
+                                    </WrapPanel>
+                                </DockPanel>
+
+                                <!-- In use | cache | free -->
+                                <c:SegmentBar Height="16" Margin="0,18,0,0"
+                                              First="{Binding BarInUse}" Second="{Binding BarCached}" Rest="{Binding BarFree}"
+                                              FirstBrush="{DynamicResource AccentGradientBrush}" SecondBrush="{DynamicResource AccentMidBrush}"
+                                              TrackBrush="{StaticResource Surface2Brush}" IsBusy="{Binding IsCleaning}">
+                                    <c:SegmentBar.Effect>
+                                        <DropShadowEffect Color="{DynamicResource AccentColor}" BlurRadius="14" ShadowDepth="0" Opacity="0.35"/>
+                                    </c:SegmentBar.Effect>
+                                </c:SegmentBar>
+                                <DockPanel Margin="0,12,0,0">
+                                    <TextBlock DockPanel.Dock="Right" Text="{Binding TotalText}" Style="{StaticResource MutedText}"/>
+                                    <WrapPanel>
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,20,0">
+                                            <Border Width="12" Height="12" CornerRadius="3" Background="{DynamicResource AccentGradientBrush}" Margin="0,0,7,0" VerticalAlignment="Center"/>
+                                            <TextBlock VerticalAlignment="Center"><Run Text="In use " FontWeight="SemiBold"/><Run Text="{Binding InUseText, Mode=OneWay}" Foreground="{StaticResource MutedBrush}"/></TextBlock>
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,20,0" Visibility="{Binding HasCacheDetail, Converter={StaticResource BoolToVis}}"
+                                                    ToolTip="Files Windows keeps in RAM to open them faster. It is handed back instantly when a program needs memory.">
+                                            <Border Width="12" Height="12" CornerRadius="3" Background="{DynamicResource AccentMidBrush}" Margin="0,0,7,0" VerticalAlignment="Center"/>
+                                            <TextBlock VerticalAlignment="Center"><Run Text="Cached " FontWeight="SemiBold"/><Run Text="{Binding CachedText, Mode=OneWay}" Foreground="{StaticResource MutedBrush}"/></TextBlock>
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Border Width="12" Height="12" CornerRadius="3" BorderBrush="{StaticResource LineHoverBrush}" BorderThickness="1.5" Margin="0,0,7,0" VerticalAlignment="Center"/>
+                                            <TextBlock VerticalAlignment="Center"><Run Text="Free " FontWeight="SemiBold"/><Run Text="{Binding FreeText, Mode=OneWay}" Foreground="{StaticResource MutedBrush}"/></TextBlock>
+                                        </StackPanel>
+                                    </WrapPanel>
+                                </DockPanel>
+                                <TextBlock Text="{Binding StatusReason}" Style="{StaticResource MutedText}" FontSize="12" Margin="0,8,0,0"/>
+                                <Border Style="{StaticResource WarnNote}" Margin="0,12,0,0" Visibility="{Binding AdminWarning, Converter={StaticResource StringToVis}}">
+                                    <TextBlock Text="{Binding AdminWarning}" TextWrapping="Wrap"/>
+                                </Border>
+                                <Border Style="{StaticResource Note}" Margin="0,12,0,0" Visibility="{Binding LastResult, Converter={StaticResource StringToVis}}">
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding LastResult}" TextWrapping="Wrap" FontWeight="SemiBold"/>
+                                        <TextBlock Text="{Binding LastSteps}" Style="{StaticResource MutedText}" FontSize="12" Margin="0,3,0,0"
+                                                   Visibility="{Binding LastSteps, Converter={StaticResource StringToVis}}"/>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- ===== Routine + allow list ===== -->
+                        <Grid Margin="0,12,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <Border Style="{StaticResource Card}" Margin="0,0,6,0" Padding="20,18">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Routine" FontSize="17" FontWeight="Bold" VerticalAlignment="Center"/>
+                                        <Border Width="1" Height="20" Background="{StaticResource LineBrush}" Margin="14,0" VerticalAlignment="Center"/>
+                                        <CheckBox Style="{StaticResource SwitchStyle}" IsChecked="{Binding AutoEnabled}" Content="Automate cleanups" VerticalAlignment="Center"/>
+                                        <Border Style="{StaticResource HelpBadge}" Margin="10,0,0,0"
+                                                ToolTip="Vanta cleans by itself in the background. Needs Vanta to be running (turn on 'Start with Windows' in Settings so it always is).">
+                                            <TextBlock Text="?" FontSize="11" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{StaticResource MutedBrush}"/>
+                                        </Border>
+                                    </StackPanel>
+
+                                    <TextBlock Text="Run when:" Style="{StaticResource MutedText}" Margin="0,18,0,10"/>
+                                    <RadioButton GroupName="ramMode" IsChecked="{Binding ModeGameStart}" Content="a game starts" Margin="0,0,0,14" FontWeight="SemiBold"/>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="210"/>
+                                        </Grid.ColumnDefinitions>
+                                        <RadioButton GroupName="ramMode" IsChecked="{Binding ModeNeedsCleaning}" FontWeight="SemiBold" VerticalAlignment="Center">
+                                            <TextBlock Text="status changes to &quot;Needs cleaning&quot;" TextWrapping="Wrap"/>
+                                        </RadioButton>
+                                        <ComboBox Grid.Column="1" ItemsSource="{x:Static vm:CleaningViewModel.IntervalOptions}" DisplayMemberPath="Label"
+                                                  SelectedItem="{Binding SelectedInterval}" IsEnabled="{Binding ModeNeedsCleaning}"/>
+                                    </Grid>
+                                    <Grid Margin="28,12,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="210"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="Counts as 'Needs cleaning' at" Style="{StaticResource MutedText}" VerticalAlignment="Center"/>
+                                        <ComboBox Grid.Column="1" ItemsSource="{x:Static vm:CleaningViewModel.ThresholdOptions}" DisplayMemberPath="Label" SelectedItem="{Binding Threshold}"/>
+                                    </Grid>
+
+                                    <Border Style="{StaticResource Note}" Margin="0,18,0,0">
+                                        <DockPanel>
+                                            <TextBlock DockPanel.Dock="Left" Text="&#xE946;" FontFamily="Segoe MDL2 Assets" Foreground="{DynamicResource AccentBrush}" Margin="0,2,10,0"/>
+                                            <TextBlock TextWrapping="Wrap" FontSize="12.5">
+                                                <Run Text="A cleanup takes a second or two, but "/><Run Text="your PC may briefly slow down" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}"/><Run Text=" while it runs. Apps you're using are never touched."/>
+                                            </TextBlock>
+                                        </DockPanel>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Grid.Column="1" Style="{StaticResource Card}" Margin="6,0,0,0" Padding="20,18">
+                                <DockPanel>
+                                    <DockPanel DockPanel.Dock="Top">
+                                        <ComboBox DockPanel.Dock="Right" Width="170" ItemsSource="{Binding RunningProcessNames}"
+                                                  SelectedItem="{Binding NewAllowApp, Mode=OneWayToSource}" DropDownOpened="OnAllowDropDownOpened"
+                                                  ToolTip="Pick a running app to add"/>
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <TextBlock Text="Allow list" FontSize="17" FontWeight="Bold" VerticalAlignment="Center"/>
+                                            <Border Style="{StaticResource HelpBadge}" Margin="10,0,0,0"
+                                                    ToolTip="Apps on this list are never trimmed, even when they run in the background (voice chat, recorders, search tools...).">
+                                                <TextBlock Text="?" FontSize="11" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{StaticResource MutedBrush}"/>
+                                            </Border>
+                                        </StackPanel>
+                                    </DockPanel>
+                                    <Grid DockPanel.Dock="Top" Margin="0,12,0,10">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBox Text="{Binding NewAllowApp, UpdateSourceTrigger=PropertyChanged}" ToolTip="App name, e.g. Discord"/>
+                                        <Button Grid.Column="1" Margin="8,0,0,0" Command="{Binding AddAllowAppCommand}">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="&#xE710;" FontFamily="Segoe MDL2 Assets" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                                <TextBlock Text="Add app"/>
+                                            </StackPanel>
+                                        </Button>
+                                    </Grid>
+                                    <ItemsControl ItemsSource="{Binding AllowList}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border CornerRadius="9" Background="{StaticResource Surface2Brush}" BorderBrush="{StaticResource LineBrush}" BorderThickness="1"
+                                                        Padding="11,5,5,5" Margin="0,0,8,8">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock Text="{Binding}" VerticalAlignment="Center"/>
+                                                        <Button Content="&#xE711;" FontFamily="Segoe MDL2 Assets" FontSize="9" Padding="6,4" Margin="8,0,0,0"
+                                                                Background="Transparent" BorderBrush="Transparent" ToolTip="Remove from allow list"
+                                                                Command="{Binding DataContext.RemoveAllowAppCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                                CommandParameter="{Binding}"/>
+                                                    </StackPanel>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </DockPanel>
+                            </Border>
+                        </Grid>
+
+                        <!-- ===== What gets cleaned ===== -->
+                        <Border Style="{StaticResource Card}" Margin="0,12,0,0">
+                            <Expander Header="What gets cleaned (advanced)">
+                                <StackPanel Margin="17,6,0,0">
+                                    <CheckBox Style="{StaticResource SwitchStyle}" IsChecked="{Binding TrimBackground}" Content="Free memory held by background apps (tray apps, updaters, idle services)"/>
+                                    <TextBlock Style="{StaticResource MutedText}" FontSize="12" Margin="54,2,0,10" Text="Skips anything busy right now, your game, Windows' core processes and the allow list."/>
+                                    <CheckBox Style="{StaticResource SwitchStyle}" IsChecked="{Binding IncludeOpenApps}" Content="Deep clean: squeeze every app and Windows' compressed memory, and clear all cache (like ExitLag)"/>
+                                    <TextBlock Style="{StaticResource MutedText}" FontSize="12" Margin="54,2,0,10" Text="Off (smart, default): the apps you're using stay snappy and useful cache is kept. On: frees as much as ExitLag-style cleaners, but open apps may feel slow for a moment when you switch back and Windows rebuilds the cache over time."/>
+                                    <CheckBox Style="{StaticResource SwitchStyle}" IsChecked="{Binding FlushModified}" Content="Write pending memory to disk (modified list)"/>
+                                    <TextBlock Style="{StaticResource MutedText}" FontSize="12" Margin="54,2,0,10" Text="Memory that's waiting to be saved to the page file is written now, so it can be reused straight away."/>
+                                    <CheckBox Style="{StaticResource SwitchStyle}" IsChecked="{Binding PurgeStandby}" Content="Clear unused cache (smart)"/>
+                                    <TextBlock Style="{StaticResource MutedText}" FontSize="12" Margin="54,2,0,10" Text="Clears low-priority cache first; the rest only if free RAM is still under 10%. That's how ISLC avoids throwing away useful cache."/>
+                                    <CheckBox Style="{StaticResource SwitchStyle}" IsChecked="{Binding CombinePages}" Content="Combine duplicate memory pages"/>
+                                    <TextBlock Style="{StaticResource MutedText}" FontSize="12" Margin="54,2,0,0" Text="Windows 10/11 feature that merges identical pages. Placebo / Marginal for games; can take a moment."/>
+                                </StackPanel>
+                            </Expander>
+                        </Border>
+
+                        <Border Style="{StaticResource Card}" Margin="0,12,0,0">
+                            <StackPanel>
+                                <TextBlock Text="{Binding CommitLine}" TextWrapping="Wrap" Style="{StaticResource MutedText}" Margin="0,0,0,14"/>
+                                <DockPanel>
+                                    <Button DockPanel.Dock="Right" Content="Refresh" Command="{Binding RefreshTopProcessesCommand}" VerticalAlignment="Top"/>
+                                    <StackPanel>
+                                        <TextBlock Text="What uses the most memory" Style="{StaticResource H2}"/>
+                                        <TextBlock Style="{StaticResource MutedText}" Margin="0,2,0,0" Text="'Private' is memory only that program uses. Browsers and launchers are usually at the top."/>
+                                    </StackPanel>
+                                </DockPanel>
+                                <ItemsControl ItemsSource="{Binding TopProcesses}" Margin="0,10,0,0">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate DataType="{x:Type s:ProcessMemory}">
+                                            <Grid Margin="0,2">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="140"/>
+                                                    <ColumnDefinition Width="140"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="{Binding Name}"/>
+                                                <TextBlock Grid.Column="1" Text="{Binding PrivateMb, StringFormat='{}{0:N0} MB private'}" HorizontalAlignment="Right"/>
+                                                <TextBlock Grid.Column="2" Text="{Binding WorkingSetMb, StringFormat='{}{0:N0} MB in RAM'}" HorizontalAlignment="Right" Foreground="{StaticResource MutedBrush}"/>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+
+                                <TextBlock Text="Memory leak watch" Style="{StaticResource H2}" Margin="0,18,0,2"/>
+                                <TextBlock Text="{Binding LeakStatus}" Style="{StaticResource MutedText}"/>
+                                <ItemsControl ItemsSource="{Binding Leaks}" Margin="0,6,0,0">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate DataType="{x:Type s:LeakSuspect}">
+                                            <TextBlock TextWrapping="Wrap" Margin="0,2" Foreground="{StaticResource WarnBrush}">
+                                                <Run Text="{Binding Name, Mode=OneWay}" FontWeight="SemiBold"/>
+                                                <Run Text="{Binding GrowthMb, Mode=OneWay, StringFormat=' grew {0:N0} MB'}"/>
+                                                <Run Text="{Binding Minutes, Mode=OneWay, StringFormat='in {0:0} minutes. Restarting it frees the memory; if it keeps happening, update or report it.'}"/>
+                                            </TextBlock>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</UserControl>

@@ -1,0 +1,217 @@
+<UserControl x:Class="TuneUp.Views.PrivacyToolsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:TuneUp.Controls"
+             xmlns:vm="clr-namespace:TuneUp.ViewModels"
+             xmlns:s="clr-namespace:TuneUp.Services"
+             Style="{StaticResource ViewFade}">
+    <Grid Margin="32,26,32,0">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Margin="0,0,0,16">
+            <TextBlock Text="Privacy &amp; Tools" Style="{StaticResource H1}"/>
+            <TextBlock Style="{StaticResource MutedText}" Margin="0,4,0,0"
+                       Text="Cut Windows' data sharing and clutter, remove apps you don't use, and run Windows' repair tools."/>
+        </StackPanel>
+
+        <TabControl Grid.Row="1" SelectedIndex="{Binding SelectedTab}">
+
+            <!-- ============================== Privacy ============================== -->
+            <TabItem Header="Privacy">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="0,0,6,24">
+                        <c:Explainer Text="Windows shares usage data with Microsoft and shows ads and suggestions in several places. These switches turn that down. They are about privacy and fewer interruptions, not FPS, and each one can be undone."/>
+                        <ItemsControl DataContext="{Binding Privacy}" ItemsSource="{Binding Items}" ItemTemplate="{StaticResource TweakCard}"/>
+                        <TextBlock DataContext="{Binding Privacy}" Text="{Binding Notice}" Foreground="{StaticResource WarnBrush}" TextWrapping="Wrap"
+                                   Visibility="{Binding Notice, Converter={StaticResource StringToVis}}"/>
+                        <TextBlock Style="{StaticResource MutedText}" FontSize="12" Margin="0,6,0,0"
+                                   Text="Also see Startup &amp; Services > Services for the telemetry service, and Startup apps for OneDrive."/>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- ============================== Apps ============================== -->
+            <TabItem Header="Remove built-in apps">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="0,0,6,24">
+                        <c:Explainer Text="Windows comes with apps many people never open. Removing them tidies the Start menu and stops some from updating in the background. Only well-known extras are listed, never parts of Windows itself, and every app can be reinstalled from the Microsoft Store."/>
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <DockPanel>
+                                    <Button DockPanel.Dock="Right" Content="Find removable apps" Style="{StaticResource AccentButton}" Command="{Binding LoadAppsCommand}"
+                                            IsEnabled="{Binding IsBusy, Converter={StaticResource InvBool}}" VerticalAlignment="Top"/>
+                                    <TextBlock Text="{Binding AppsStatus}" Style="{StaticResource MutedText}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                </DockPanel>
+                                <ItemsControl ItemsSource="{Binding StoreApps}" Margin="0,10,0,0">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate DataType="{x:Type s:StoreApp}">
+                                            <Border Background="{StaticResource Surface2Brush}" CornerRadius="10" Padding="12,9" Margin="0,0,0,6">
+                                                <DockPanel>
+                                                    <Button DockPanel.Dock="Right" Content="Remove" Padding="12,5" VerticalAlignment="Center"
+                                                            Command="{Binding DataContext.RemoveAppCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"/>
+                                                    <StackPanel>
+                                                        <TextBlock Text="{Binding Friendly}" FontWeight="SemiBold"/>
+                                                        <TextBlock Text="{Binding Note}" FontSize="12" Foreground="{StaticResource WarnBrush}" TextWrapping="Wrap"
+                                                                   Visibility="{Binding Note, Converter={StaticResource StringToVis}}"/>
+                                                    </StackPanel>
+                                                </DockPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- ============================== Programs ============================== -->
+            <TabItem Header="Programs">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="360"/>
+                    </Grid.ColumnDefinitions>
+                    <c:Explainer Grid.ColumnSpan="2" Text="Everything installed on your PC. 'Uninstall' opens the program's own uninstaller. Afterwards, 'Find leftovers' shows folders it may have left behind so you can reclaim the space."/>
+                    <DockPanel Grid.Row="1" Grid.ColumnSpan="2" Margin="0,0,0,10">
+                        <Button DockPanel.Dock="Right" Content="Refresh" Command="{Binding LoadProgramsCommand}"/>
+                        <Grid Width="280" HorizontalAlignment="Left">
+                            <TextBox Text="{Binding ProgramFilter, UpdateSourceTrigger=PropertyChanged}" Padding="32,7,9,7"/>
+                            <TextBlock Text="&#xE721;" FontFamily="Segoe MDL2 Assets" Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" Margin="11,0,0,0" IsHitTestVisible="False"/>
+                        </Grid>
+                        <TextBlock Text="{Binding ProgramsStatus}" Style="{StaticResource MutedText}" VerticalAlignment="Center" Margin="12,0"/>
+                    </DockPanel>
+                    <ListBox Grid.Row="2" ItemsSource="{Binding Programs}" SelectedItem="{Binding SelectedProgram}" Style="{StaticResource PlainList}"
+                             VirtualizingPanel.IsVirtualizing="True" Margin="0,0,12,12">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate DataType="{x:Type s:InstalledProgram}">
+                                <DockPanel>
+                                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding SizeText}" Style="{StaticResource MutedText}" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                        <Button Content="Uninstall" Padding="10,4" Margin="0,0,6,0"
+                                                Command="{Binding DataContext.UninstallCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"/>
+                                        <Button Content="Find leftovers" Padding="10,4"
+                                                Command="{Binding DataContext.FindLeftoversCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"/>
+                                    </StackPanel>
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock Style="{StaticResource MutedText}" FontSize="11.5" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap">
+                                            <Run Text="{Binding Publisher, Mode=OneWay}"/><Run Text="{Binding Version, Mode=OneWay, StringFormat='  {0}'}"/><Run Text="{Binding InstallDate, Mode=OneWay, StringFormat='  installed {0}'}"/>
+                                        </TextBlock>
+                                    </StackPanel>
+                                </DockPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                    <Border Grid.Row="2" Grid.Column="1" Style="{StaticResource Card}" VerticalAlignment="Top" Margin="0,0,0,12">
+                        <StackPanel>
+                            <TextBlock Text="Leftovers" Style="{StaticResource H2}"/>
+                            <TextBlock Text="{Binding SelectedProgram.Name, FallbackValue='Pick a program and click Find leftovers', TargetNullValue='Pick a program and click Find leftovers'}"
+                                       Style="{StaticResource MutedText}" Margin="0,2,0,8"/>
+                            <ItemsControl ItemsSource="{Binding Leftovers}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate DataType="{x:Type s:Leftover}">
+                                        <StackPanel Margin="0,0,0,10">
+                                            <TextBlock Text="{Binding Path}" TextWrapping="Wrap" FontSize="12"/>
+                                            <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                                <TextBlock Text="{Binding Size, Converter={StaticResource SizeText}}" Style="{StaticResource MutedText}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                                <Button Content="Open" Padding="9,3" Margin="0,0,6,0"
+                                                        Command="{Binding DataContext.OpenFolderCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding Path}"/>
+                                                <Button Content="Recycle" Padding="9,3"
+                                                        Command="{Binding DataContext.RecycleLeftoverCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"/>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </TabItem>
+
+            <!-- ============================== Tools ============================== -->
+            <TabItem Header="Tools">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="0,0,6,24">
+                        <c:Explainer Text="Windows' own repair tools, made easy. If Windows feels broken (crashes, apps not opening, update errors), run the System File Checker first, then DISM if it can't fix everything. They don't touch your personal files."/>
+
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <TextBlock Text="Repair Windows" Style="{StaticResource H2}"/>
+                                <WrapPanel Margin="0,10,0,0">
+                                    <Button Content="1. Check system files (SFC)" Style="{StaticResource AccentButton}" Command="{Binding RunSfcCommand}" Margin="0,0,8,6" IsEnabled="{Binding ToolRunning, Converter={StaticResource InvBool}}"/>
+                                    <Button Content="2. Repair component store (DISM)" Command="{Binding RunDismCommand}" Margin="0,0,8,6" IsEnabled="{Binding ToolRunning, Converter={StaticResource InvBool}}"/>
+                                    <Button Content="Check drive for errors (CHKDSK)" Command="{Binding RunChkdskCommand}" Margin="0,0,8,6" IsEnabled="{Binding ToolRunning, Converter={StaticResource InvBool}}"/>
+                                    <Button Content="Stop" Style="{StaticResource DangerButton}" Command="{Binding StopToolCommand}" Margin="0,0,0,6" Visibility="{Binding ToolRunning, Converter={StaticResource BoolToVis}}"/>
+                                </WrapPanel>
+                                <TextBox Text="{Binding ToolLog, Mode=OneWay}" IsReadOnly="True" FontFamily="Consolas" FontSize="12" Margin="0,8,0,0"
+                                         MaxHeight="240" VerticalScrollBarVisibility="Auto" TextWrapping="Wrap"
+                                         Visibility="{Binding ToolLog, Converter={StaticResource StringToVis}}"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource Card}" Margin="0,12,0,0">
+                            <StackPanel>
+                                <TextBlock Text="Reports and maintenance" Style="{StaticResource H2}"/>
+                                <WrapPanel Margin="0,10,0,0">
+                                    <Button Content="Export system report" Command="{Binding ExportReportCommand}" Margin="0,0,8,6"
+                                            ToolTip="A shareable page with your hardware, drivers and Vanta's findings, for forums or tech support."/>
+                                    <Button Content="Battery health report" Command="{Binding BatteryReportCommand}" Margin="0,0,8,6" Visibility="{Binding HasBattery, Converter={StaticResource BoolToVis}}"/>
+                                    <Button Command="{Binding ToggleMaintenanceCommand}" Margin="0,0,8,6">
+                                        <Button.Style>
+                                            <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                                                <Setter Property="Content" Value="Schedule weekly clean-up"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding MaintenanceOn}" Value="True"><Setter Property="Content" Value="Remove weekly clean-up"/></DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Button.Style>
+                                    </Button>
+                                </WrapPanel>
+                                <TextBlock Text="{Binding ToolsStatus}" Margin="0,6,0,0" TextWrapping="Wrap" Visibility="{Binding ToolsStatus, Converter={StaticResource StringToVis}}"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource Card}" Margin="0,12,0,0">
+                            <StackPanel>
+                                <TextBlock Text="Old game compatibility" Style="{StaticResource H2}"/>
+                                <TextBlock Style="{StaticResource MutedText}" Margin="0,2,0,10" Text="For older games that crash, look blurry or won't start. Same options as the EXE's Properties > Compatibility tab, saved through Vanta's undo pipeline."/>
+                                <Grid>
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <TextBox Text="{Binding CompatExe}" IsReadOnly="True"/>
+                                    <Button Grid.Column="1" Content="Pick EXE" Command="{Binding BrowseCompatExeCommand}" Margin="8,0,0,0"/>
+                                </Grid>
+                                <ItemsControl ItemsSource="{Binding CompatFlags}" Margin="0,10,0,0">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate DataType="{x:Type vm:CompatFlagVm}">
+                                            <CheckBox Style="{StaticResource SwitchStyle}" IsChecked="{Binding IsChecked}" Content="{Binding Label}" Margin="0,0,0,8"/>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <StackPanel Orientation="Horizontal">
+                                    <Button Content="Save compatibility settings" Style="{StaticResource AccentButton}" Command="{Binding ApplyCompatCommand}"/>
+                                    <TextBlock Text="{Binding CompatStatus}" Style="{StaticResource MutedText}" VerticalAlignment="Center" Margin="12,0,0,0"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource Card}" Margin="0,12,0,0">
+                            <StackPanel>
+                                <TextBlock Text="About Windows editions" Style="{StaticResource H2}"/>
+                                <TextBlock Style="{StaticResource MutedText}" Margin="0,6,0,0" Text="'N' editions of Windows lack media features some games need (cutscenes, voice chat): install the free Media Feature Pack from Settings > Apps > Optional features. 'Debloated' or modified Windows ISOs from the internet often break updates and security, and can contain malware; a normal Windows install plus the switches in Vanta gets you most of the benefit safely. Vanta never includes cracks or activators."/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</UserControl>

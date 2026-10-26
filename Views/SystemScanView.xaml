@@ -1,0 +1,368 @@
+<UserControl x:Class="TuneUp.Views.SystemScanView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:TuneUp.Controls"
+             xmlns:vm="clr-namespace:TuneUp.ViewModels"
+             xmlns:m="clr-namespace:TuneUp.Models"
+             Style="{StaticResource ViewFade}">
+    <UserControl.Resources>
+        <!-- Small "Impact: High" style pill -->
+        <Style x:Key="Pill" TargetType="Border" BasedOn="{StaticResource Chip}">
+            <Setter Property="Background" Value="#12FFFFFF"/>
+            <Setter Property="Margin" Value="0,0,6,4"/>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Margin="32,26,32,0">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Grid Margin="0,0,0,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel>
+                <TextBlock Text="System Scan" Style="{StaticResource H1}"/>
+                <TextBlock Text="{Binding Status}" Style="{StaticResource MutedText}" Margin="0,4,0,0"/>
+            </StackPanel>
+            <Button Grid.Column="1" Style="{StaticResource AccentButton}" VerticalAlignment="Top" Padding="20,10"
+                    Command="{Binding ScanCommand}" IsEnabled="{Binding IsScanning, Converter={StaticResource InvBool}}">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="&#xE721;" FontFamily="Segoe MDL2 Assets" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="Scan my PC"/>
+                </StackPanel>
+            </Button>
+        </Grid>
+
+        <TabControl Grid.Row="1" SelectedIndex="{Binding SelectedTab}">
+
+            <!-- ============================== Recommendations ============================== -->
+            <TabItem Header="What to fix first">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="0,0,6,24">
+                        <c:Explainer Text="Vanta checked your hardware, BIOS, drivers, drives and Windows settings, and sorted what it found by how much it actually matters. Start at the top. Each item says how sure we are it helps, and the button takes you straight to the fix."/>
+
+                        <Grid Margin="0,0,0,14" Visibility="{Binding HasScanned, Converter={StaticResource BoolToVis}}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Style="{StaticResource Card}" Margin="0,0,8,0" Padding="16,12">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding HighCount}" FontSize="28" FontWeight="Bold" Foreground="{StaticResource BadBrush}"/>
+                                    <TextBlock Text="High impact" Style="{StaticResource MutedText}"/>
+                                </StackPanel>
+                            </Border>
+                            <Border Grid.Column="1" Style="{StaticResource Card}" Margin="4,0" Padding="16,12">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding MediumCount}" FontSize="28" FontWeight="Bold" Foreground="{StaticResource WarnBrush}"/>
+                                    <TextBlock Text="Medium impact" Style="{StaticResource MutedText}"/>
+                                </StackPanel>
+                            </Border>
+                            <Border Grid.Column="2" Style="{StaticResource Card}" Margin="8,0,0,0" Padding="16,12">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding LowCount}" FontSize="28" FontWeight="Bold" Foreground="{StaticResource MutedBrush}"/>
+                                    <TextBlock Text="Nice to have" Style="{StaticResource MutedText}"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+
+                        <TextBlock Text="Scanning..." Style="{StaticResource MutedText}" Visibility="{Binding IsScanning, Converter={StaticResource BoolToVis}}"/>
+
+                        <ItemsControl ItemsSource="{Binding Recommendations}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="{x:Type m:Recommendation}">
+                                    <Border Style="{StaticResource HoverCard}" Padding="0" Margin="0,0,0,10">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="5"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Border CornerRadius="14,0,0,14" Background="{Binding Impact, Converter={StaticResource ImpactToBrush}}"/>
+                                            <StackPanel Grid.Column="1" Margin="16,14,10,14">
+                                                <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="14.5" TextWrapping="Wrap"/>
+                                                <WrapPanel Margin="0,8,0,4">
+                                                    <Border Style="{StaticResource Pill}">
+                                                        <TextBlock FontSize="11"><Run Text="Impact " Foreground="{StaticResource MutedBrush}"/><Run Text="{Binding Impact, Mode=OneWay}" FontWeight="SemiBold" Foreground="{Binding Impact, Converter={StaticResource ImpactToBrush}}"/></TextBlock>
+                                                    </Border>
+                                                    <Border Style="{StaticResource Pill}">
+                                                        <TextBlock FontSize="11"><Run Text="Evidence " Foreground="{StaticResource MutedBrush}"/><Run Text="{Binding Evidence, Mode=OneWay}" FontWeight="SemiBold" Foreground="{Binding Evidence, Converter={StaticResource EvidenceToBrush}}"/></TextBlock>
+                                                    </Border>
+                                                    <Border Style="{StaticResource Pill}">
+                                                        <TextBlock Text="{Binding Category}" FontSize="11" Foreground="{StaticResource MutedBrush}"/>
+                                                    </Border>
+                                                </WrapPanel>
+                                                <TextBlock Text="{Binding Detail}" Style="{StaticResource MutedText}" Margin="0,2,0,0"
+                                                           Visibility="{Binding Detail, Converter={StaticResource StringToVis}}"/>
+                                                <TextBlock TextWrapping="Wrap" Margin="0,6,0,0" Visibility="{Binding Fix, Converter={StaticResource StringToVis}}">
+                                                    <Run Text="How to fix: " FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}"/><Run Text="{Binding Fix, Mode=OneWay}"/>
+                                                </TextBlock>
+                                            </StackPanel>
+                                            <Button Grid.Column="2" Margin="0,14,16,0" VerticalAlignment="Top" Content="{Binding ActionLabel}"
+                                                    Style="{StaticResource AccentButton}"
+                                                    Visibility="{Binding Action, Converter={StaticResource StringToVis}}"
+                                                    Command="{Binding DataContext.FixCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding}"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- ============================== BIOS ============================== -->
+            <TabItem Header="BIOS &amp; Firmware">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="0,0,6,24">
+                        <c:Explainer Text="The BIOS is the settings screen your PC shows before Windows starts. A few settings there matter for games (the big one: the RAM speed profile). Windows can't change them, so Vanta shows what it detected and exactly where to click for your motherboard brand. Export the checklist to your phone, then use 'Reboot to BIOS'."/>
+
+                        <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                            <DockPanel>
+                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Button Content="Board support page" Command="{Binding OpenSupportPageCommand}" Margin="0,0,8,0"/>
+                                    <Button Content="Export checklist" Command="{Binding ExportChecklistCommand}" Margin="0,0,8,0"/>
+                                    <Button Content="Reboot to BIOS" Style="{StaticResource AccentButton}" Command="{Binding RebootToBiosCommand}"/>
+                                </StackPanel>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="Your motherboard" Style="{StaticResource MutedText}" FontSize="12"/>
+                                    <TextBlock Text="{Binding BoardLine}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </DockPanel>
+                        </Border>
+
+                        <ItemsControl ItemsSource="{Binding BiosChecks}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="{x:Type m:BiosCheck}">
+                                    <Border Style="{StaticResource HoverCard}" Margin="0,0,0,10" Padding="16,14">
+                                        <DockPanel>
+                                            <Ellipse DockPanel.Dock="Left" Width="10" Height="10" Margin="0,5,14,0" VerticalAlignment="Top"
+                                                     Fill="{Binding Severity, Converter={StaticResource SeverityToBrush}}"/>
+                                            <StackPanel>
+                                                <WrapPanel>
+                                                    <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="14.5" Margin="0,0,10,4"/>
+                                                    <Border Style="{StaticResource Pill}">
+                                                        <TextBlock FontSize="11"><Run Text="Evidence " Foreground="{StaticResource MutedBrush}"/><Run Text="{Binding Evidence, Mode=OneWay}" FontWeight="SemiBold" Foreground="{Binding Evidence, Converter={StaticResource EvidenceToBrush}}"/></TextBlock>
+                                                    </Border>
+                                                </WrapPanel>
+                                                <TextBlock TextWrapping="Wrap" Margin="0,2,0,0">
+                                                    <Run Text="Detected: " Foreground="{StaticResource MutedBrush}"/><Run Text="{Binding Detected, Mode=OneWay}" FontWeight="SemiBold" Foreground="{Binding Severity, Converter={StaticResource SeverityToBrush}}"/>
+                                                </TextBlock>
+                                                <TextBlock Text="{Binding Why}" TextWrapping="Wrap" Margin="0,6,0,0"/>
+                                                <Expander Header="Where to find it" Margin="0,8,0,0">
+                                                    <TextBlock Text="{Binding HowTo}" TextWrapping="Wrap" Margin="17,0,0,0" Style="{StaticResource MutedText}"/>
+                                                </Expander>
+                                            </StackPanel>
+                                        </DockPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <Border Style="{StaticResource WarnNote}" Margin="0,4,0,0">
+                            <TextBlock TextWrapping="Wrap" Text="Change one BIOS setting at a time and check the PC still boots. If it won't start after a change, most boards reset themselves after a few failed tries; otherwise 'Clear CMOS' (see your manual) restores the defaults. Vanta never changes or flashes your BIOS."/>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- ============================== Drivers ============================== -->
+            <TabItem Header="Drivers &amp; Updates">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="0,0,6,24">
+                        <c:Explainer Text="Drivers are the small programs that let Windows talk to your hardware. The graphics driver matters most for games. Vanta flags old or generic drivers and links to the official download page; it never installs drivers from random sites."/>
+
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <DockPanel>
+                                    <Button DockPanel.Dock="Right" Content="Back up my drivers" Command="{Binding BackupDriversCommand}" VerticalAlignment="Top"/>
+                                    <StackPanel>
+                                        <TextBlock Text="Important drivers" Style="{StaticResource H2}"/>
+                                        <TextBlock Style="{StaticResource MutedText}" Margin="0,2,0,0" Text="Graphics, network, audio, storage, USB and chipset. Problems first."/>
+                                    </StackPanel>
+                                </DockPanel>
+                                <TextBlock Text="{Binding DriverBackupStatus}" Margin="0,8,0,0" TextWrapping="Wrap" Foreground="{DynamicResource AccentBrush}"
+                                           Visibility="{Binding DriverBackupStatus, Converter={StaticResource StringToVis}}"/>
+                                <ItemsControl ItemsSource="{Binding Drivers}" Margin="0,12,0,0">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate DataType="{x:Type m:DriverInfo}">
+                                            <Border Background="{StaticResource Surface2Brush}" CornerRadius="10" Padding="12,10" Margin="0,0,0,6">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="14"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="170"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <Ellipse Width="8" Height="8" VerticalAlignment="Top" Margin="0,6,0,0"
+                                                             Fill="{Binding Severity, Converter={StaticResource SeverityToBrush}}"/>
+                                                    <StackPanel Grid.Column="1">
+                                                        <TextBlock TextWrapping="Wrap"><Run Text="{Binding Device, Mode=OneWay}" FontWeight="SemiBold"/><Run Text="{Binding Class, Mode=OneWay, StringFormat='   {0}'}" Foreground="{StaticResource MutedBrush}" FontSize="12"/></TextBlock>
+                                                        <TextBlock Text="{Binding Note}" Style="{StaticResource MutedText}" FontSize="12" Margin="0,2,0,0"
+                                                                   Visibility="{Binding Note, Converter={StaticResource StringToVis}}"/>
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Column="2" Margin="10,0">
+                                                        <TextBlock Text="{Binding Version}" FontFamily="Consolas" FontSize="12"/>
+                                                        <TextBlock Style="{StaticResource MutedText}" FontSize="11.5"><Run Text="{Binding DateText, Mode=OneWay}"/><Run Text="  "/><Run Text="{Binding AgeText, Mode=OneWay}"/></TextBlock>
+                                                    </StackPanel>
+                                                    <Button Grid.Column="3" Content="Download" VerticalAlignment="Top" Padding="12,5"
+                                                            Visibility="{Binding Link, Converter={StaticResource StringToVis}}"
+                                                            Command="{Binding DataContext.OpenLinkCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                            CommandParameter="{Binding Link}"/>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- winget -->
+                        <Border Style="{StaticResource Card}" Margin="0,12,0,0">
+                            <StackPanel>
+                                <DockPanel>
+                                    <Button DockPanel.Dock="Right" Content="Check app updates" Command="{Binding CheckWingetCommand}" VerticalAlignment="Top"
+                                            IsEnabled="{Binding IsCheckingUpdates, Converter={StaticResource InvBool}}"/>
+                                    <StackPanel>
+                                        <TextBlock Text="App updates (winget)" Style="{StaticResource H2}"/>
+                                        <TextBlock Style="{StaticResource MutedText}" Margin="0,2,0,0"
+                                                   Text="Uses Windows' built-in package manager to find newer versions of your apps (launchers, Discord, browsers...). Each update only runs when you click it."/>
+                                    </StackPanel>
+                                </DockPanel>
+                                <TextBlock Text="{Binding WingetStatus}" Margin="0,8,0,0" TextWrapping="Wrap"
+                                           Visibility="{Binding WingetStatus, Converter={StaticResource StringToVis}}"/>
+                                <ItemsControl ItemsSource="{Binding WingetUpdates}" Margin="0,8,0,0">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate DataType="{x:Type vm:UpdateRowVm}">
+                                            <Grid Margin="0,0,0,6">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="220"/>
+                                                    <ColumnDefinition Width="110"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="{Binding Name}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" ToolTip="{Binding Item.Id}"/>
+                                                <TextBlock Grid.Column="1" Text="{Binding Versions}" Style="{StaticResource MutedText}" VerticalAlignment="Center" FontSize="12"/>
+                                                <TextBlock Grid.Column="2" Text="{Binding Status}" VerticalAlignment="Center" Foreground="{DynamicResource AccentBrush}" FontSize="12"/>
+                                                <Button Grid.Column="3" Content="Update" Padding="12,5"
+                                                        IsEnabled="{Binding IsBusy, Converter={StaticResource InvBool}}"
+                                                        Command="{Binding DataContext.UpgradeCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                        CommandParameter="{Binding}"/>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Windows Update -->
+                        <Border Style="{StaticResource Card}" Margin="0,12,0,0">
+                            <StackPanel>
+                                <DockPanel>
+                                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Top">
+                                        <Button Content="Open Windows Update" Command="{Binding OpenWindowsUpdateCommand}" Margin="0,0,8,0"/>
+                                        <Button Content="Check" Command="{Binding CheckWindowsUpdateCommand}"
+                                                IsEnabled="{Binding IsCheckingUpdates, Converter={StaticResource InvBool}}"/>
+                                    </StackPanel>
+                                    <StackPanel>
+                                        <TextBlock Text="Windows Update" Style="{StaticResource H2}"/>
+                                        <TextBlock Style="{StaticResource MutedText}" Margin="0,2,0,0"
+                                                   Text="Lists updates Windows has not installed yet, including optional driver updates. Installing stays in Windows Update."/>
+                                    </StackPanel>
+                                </DockPanel>
+                                <TextBlock Text="{Binding WindowsUpdateStatus}" Margin="0,8,0,0" TextWrapping="Wrap"
+                                           Visibility="{Binding WindowsUpdateStatus, Converter={StaticResource StringToVis}}"/>
+                                <ItemsControl ItemsSource="{Binding WindowsUpdates}" Margin="0,8,0,0">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate DataType="{x:Type vm:UpdateRowVm}">
+                                            <TextBlock TextWrapping="Wrap" Margin="0,2"><Run Text="•  "/><Run Text="{Binding Name, Mode=OneWay}"/><Run Text="{Binding Versions, Mode=OneWay, StringFormat='   {0}'}" Foreground="{StaticResource MutedBrush}"/></TextBlock>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- ============================== Health ============================== -->
+            <TabItem Header="Hardware Health">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="0,0,6,24">
+                        <c:Explainer Text="Checks that your drives, memory and cooling are healthy. A failing drive or an overheating CPU causes stutter no tweak can fix, and a failing drive can lose your files, so problems here come first."/>
+
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <TextBlock Text="Drives" Style="{StaticResource H2}"/>
+                                <TextBlock Style="{StaticResource MutedText}" Margin="0,2,0,10"
+                                           Text="Health, SSD wear, temperature and error counters reported by the drives themselves (SMART / NVMe health)."/>
+                                <ItemsControl ItemsSource="{Binding Disks}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate DataType="{x:Type m:DiskHealth}">
+                                            <Border Background="{StaticResource Surface2Brush}" CornerRadius="10" Padding="14,12" Margin="0,0,0,8">
+                                                <DockPanel>
+                                                    <Ellipse DockPanel.Dock="Left" Width="10" Height="10" Margin="0,5,12,0" VerticalAlignment="Top"
+                                                             Fill="{Binding Severity, Converter={StaticResource SeverityToBrush}}"/>
+                                                    <StackPanel>
+                                                        <TextBlock TextWrapping="Wrap">
+                                                            <Run Text="{Binding Name, Mode=OneWay}" FontWeight="SemiBold"/>
+                                                            <Run Text="{Binding Type, Mode=OneWay, StringFormat='  {0}'}" Foreground="{StaticResource MutedBrush}"/>
+                                                            <Run Text="{Binding SizeGb, Mode=OneWay, StringFormat='  {0:0} GB'}" Foreground="{StaticResource MutedBrush}"/>
+                                                            <Run Text="{Binding Health, Mode=OneWay, StringFormat='   {0}'}" FontWeight="SemiBold" Foreground="{Binding Severity, Converter={StaticResource SeverityToBrush}}"/>
+                                                        </TextBlock>
+                                                        <TextBlock Text="{Binding Verdict}" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                                                        <TextBlock Text="{Binding Details}" Style="{StaticResource MutedText}" FontSize="12" Margin="0,4,0,0"/>
+                                                    </StackPanel>
+                                                </DockPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource Card}" Margin="0,12,0,0">
+                            <StackPanel>
+                                <DockPanel>
+                                    <Button DockPanel.Dock="Right" Content="Check again" Command="{Binding CheckThermalsCommand}" VerticalAlignment="Top"/>
+                                    <StackPanel>
+                                        <TextBlock Text="Overheating and throttling" Style="{StaticResource H2}"/>
+                                        <TextBlock Style="{StaticResource MutedText}" Margin="0,2,0,0"
+                                                   Text="Looks at the last few minutes of sensor readings for signs that the CPU or GPU slowed down because of heat or power limits."/>
+                                    </StackPanel>
+                                </DockPanel>
+                                <TextBlock Text="{Binding ThermalText}" TextWrapping="Wrap" Margin="0,10,0,0"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource Card}" Margin="0,12,0,0">
+                            <StackPanel>
+                                <DockPanel>
+                                    <Button DockPanel.Dock="Right" Content="Open Memory Diagnostic" Command="{Binding MemoryDiagnosticCommand}" VerticalAlignment="Top"/>
+                                    <StackPanel>
+                                        <TextBlock Text="Memory (RAM) errors" Style="{StaticResource H2}"/>
+                                        <TextBlock Style="{StaticResource MutedText}" Margin="0,2,0,0"
+                                                   Text="Random crashes, blue screens or corrupted game files can mean faulty RAM or an unstable XMP/EXPO profile. Windows Memory Diagnostic tests it during a restart (it asks first). For a deeper test use MemTest86 or TestMem5."/>
+                                    </StackPanel>
+                                </DockPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource Card}" Margin="0,12,0,0">
+                            <StackPanel>
+                                <TextBlock Text="Power supply" Style="{StaticResource H2}"/>
+                                <TextBlock Style="{StaticResource MutedText}" Margin="0,4,0,0"
+                                           Text="Windows can't read a desktop power supply's health. Warning signs: the PC switches off or restarts under heavy gaming load (not a blue screen), or the GPU driver crashes only in demanding games. Those usually point to a weak or aging PSU, or a loose GPU power cable."/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</UserControl>

@@ -1,0 +1,68 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <AssemblyName>Vanta</AssemblyName>
+    <!-- Code namespaces keep the original working name; only the product is called Vanta. -->
+    <RootNamespace>TuneUp</RootNamespace>
+    <Product>Vanta</Product>
+    <!-- Release builds get their version from the release workflow (-p:Version=...). -->
+    <Version>0.3.0</Version>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\vanta.ico</ApplicationIcon>
+
+    <!-- Single-file, self-contained win-x64 publish -->
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <DebugType>embedded</DebugType>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+
+    <!-- "owner/repo" on GitHub, used by the update check. The release workflow fills it in;
+         local builds leave it empty, which turns the update check off. -->
+    <GitHubRepo Condition="'$(GitHubRepo)' == ''"></GitHubRepo>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <AssemblyMetadata Include="GitHubRepo" Value="$(GitHubRepo)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
+    <PackageReference Include="LibreHardwareMonitorLib" Version="0.9.6" />
+    <!-- LibreHardwareMonitorLib 0.9.6 requires System.Management >= 10.0.2 (still targets net8.0) -->
+    <PackageReference Include="System.Management" Version="10.0.2" />
+    <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="10.0.2" />
+    <PackageReference Include="System.ServiceProcess.ServiceController" Version="10.0.2" />
+    <!-- ETW: PresentMon-style frametime capture and LatencyMon-style DPC/ISR sampling -->
+    <PackageReference Include="Microsoft.Diagnostics.Tracing.TraceEvent" Version="3.1.13" />
+    <!-- System tray icon with quick actions (Phase 4) -->
+    <PackageReference Include="Hardcodet.NotifyIcon.Wpf" Version="2.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\vanta.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- WPF projects drop System.IO from implicit usings (clash with Shapes.Path); add it back globally -->
+    <Using Include="System.IO" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The built-in tweak catalog is embedded so it ships inside the single EXE.
+         You can add more tweaks without recompiling by dropping .json files in
+         %LocalAppData%\TuneUp\Catalog\ (same format). -->
+    <EmbeddedResource Include="Data\tweaks.json" LogicalName="tweaks.json" />
+    <!-- In-game config presets (FPS Boost Center > Game Configs). Extra files can go in
+         %LocalAppData%\TuneUp\GamePresets\ -->
+    <EmbeddedResource Include="Data\gamepresets.json" LogicalName="gamepresets.json" />
+  </ItemGroup>
+
+</Project>
