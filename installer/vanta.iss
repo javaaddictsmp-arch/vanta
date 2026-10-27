@@ -55,7 +55,10 @@ Name: "{autoprograms}\Vanta"; Filename: "{app}\Vanta.exe"
 Name: "{autodesktop}\Vanta"; Filename: "{app}\Vanta.exe"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\Vanta.exe"; Description: "Open Vanta now"; Flags: nowait postinstall skipifsilent
+; postinstall entries run as the original (non-admin) user, and Vanta's manifest requires admin, so a
+; plain CreateProcess fails with error 740. shellexec goes through ShellExecute, which shows the normal
+; admin prompt instead.
+Filename: "{app}\Vanta.exe"; Description: "Open Vanta now"; Flags: nowait postinstall skipifsilent shellexec
 
 [UninstallRun]
 ; The scheduled tasks point at the EXE being removed, so always delete them (harmless if absent).
